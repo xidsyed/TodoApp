@@ -1,0 +1,15 @@
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://host.docker.internal:54322/postgres
+    username: postgres
+    password: postgres
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO

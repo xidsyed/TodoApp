@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  todoapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on: []

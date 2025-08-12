@@ -1,0 +1,19 @@
+meta {
+  name: hello
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/hello?name=jackson
+  body: none
+  auth: inherit
+}
+
+params:query {
+  name: jackson
+}
+
+settings {
+  encodeUrl: true
+}

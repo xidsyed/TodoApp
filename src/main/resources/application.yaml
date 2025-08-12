@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: todoapp
+
+  r2dbc:
+    url: r2dbc:postgresql://localhost:54322/postgres
+    username: postgres
+    password: postgres
+  r2dbc.pool:
+    enabled: true
+    initial-size: 4
+    max-size: 10
+    max-idle-time: 30m
+    max-life-time: 1h
+
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO

@@ -1,7 +1,7 @@
 plugins {
-	kotlin("jvm") version "1.9.25"
-	kotlin("plugin.spring") version "1.9.25"
-	id("org.springframework.boot") version "3.5.4"
+	kotlin("jvm") version "2.2.10"
+	kotlin("plugin.spring") version "2.2.10"
+	id("org.springframework.boot") version "4.0.0-M3"
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -10,7 +10,7 @@ version = "0.0.1-SNAPSHOT"
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(24)
 	}
 }
 
@@ -28,11 +28,19 @@ dependencies {
 	// springboot webflux
 	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+	// database
+	runtimeOnly("org.postgresql:postgresql")
 	runtimeOnly("org.postgresql:r2dbc-postgresql")
 
-	// security
+
+
+	// Security
 	implementation("org.springframework.boot:spring-boot-starter-security")
-	implementation("com.nimbusds:nimbus-jose-jwt:9.37.3") // JWT verification
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+
+	// Validation for DTOs
+	implementation("org.springframework.boot:spring-boot-starter-validation")
 
 	// jackson kotlin
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -42,6 +50,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
+	implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
 	// devtools
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -49,17 +58,20 @@ dependencies {
 	// annotations
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
+	// caching
+	implementation("org.springframework.boot:spring-boot-starter-cache")
+	implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
+
 	// testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("io.projectreactor:reactor-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
-	//testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 kotlin {
 	compilerOptions {
-		freeCompilerArgs.addAll("-Xjsr305=strict")
+		freeCompilerArgs.addAll("-Xjsr305=strict",  "-Xannotation-default-target=param-property")
 	}
 }
 

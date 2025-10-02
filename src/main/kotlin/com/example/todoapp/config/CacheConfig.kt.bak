@@ -1,0 +1,101 @@
+package com.example.todoapp.config
+
+import jakarta.annotation.PreDestroy
+import org.ehcache.config.builders.*
+import org.ehcache.config.units.*
+import org.ehcache.core.config.DefaultConfiguration
+import org.ehcache.impl.config.persistence.DefaultPersistenceConfiguration
+import org.ehcache.jsr107.*
+import org.slf4j.LoggerFactory
+import org.springframework.cache.jcache.JCacheCacheManager
+import org.springframework.context.annotation.*
+import java.io.File
+import java.time.Duration
+import javax.cache.Caching
+
+@Suppress("unused")
+@Configuration
+class CacheConfig {
+
+	// use a stable, app-local folder (relative to app dir). create if missing.
+	private val persistenceRoot = File("data/ehcache-persistence").apply { mkdirs() }
+	private val logger = LoggerFactory.getLogger(CacheConfig::class.java)
+
+	// keep the JCache CacheManager so we can close it at shutdown
+	private val jCacheManager: javax.cache.CacheManager
+
+	companion object {
+		const val DEDUPE_CACHE = "dedupe_cache"
+		const val BLACKLIST_CACHE = "blacklist_cache"
+		const val DB_ROW_CACHE = "db_row_cache"
+	}
+
+	init {
+		// get the Ehcache JCache provider and cast to Ehcache-specific provider
+		val provider = Caching.getCachingProvider(EhcacheCachingProvider::class.java.name) as EhcacheCachingProvider
+
+		val defaultConfig = DefaultConfiguration(
+			provider.defaultClassLoader,
+			DefaultPersistenceConfiguration(persistenceRoot)
+		)
+
+		// get a JCache CacheManager instance whose underlying Ehcache manager will use our persistence config
+		jCacheManager = provider.getCacheManager(provider.defaultURI, defaultConfig)
+
+		// now register caches programmatically on the jCacheManager by converting Ehcache configs
+		val dedupeCfg = CacheConfigurationBuilder.newCacheConfigurationBuilder(
+			Long::class.javaObjectType, Any::class.java,
+			ResourcePoolsBuilder
+				.newResourcePoolsBuilder()
+				.heap(10_000, EntryUnit.ENTRIES)
+				.disk(50, MemoryUnit.MB, true)
+		).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(10))).build()
+
+
+		val blacklistCfg = CacheConfigurationBuilder.newCacheConfigurationBuilder(
+			String::class.java, String::class.java,
+			ResourcePoolsBuilder.newResourcePoolsBuilder()
+				.heap(10_000, EntryUnit.ENTRIES)
+				.disk(50, MemoryUnit.MB, true) // persistent disk tier
+		).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofDays(7))).build()
+
+		val dbRowCfg = CacheConfigurationBuilder.newCacheConfigurationBuilder(
+			Long::class.javaObjectType, Any::class.java,
+			ResourcePoolsBuilder.newResourcePoolsBuilder()
+				.heap(10_000, EntryUnit.ENTRIES)
+		).withExpiry(ExpiryPolicyBuilder.timeToIdleExpiration(Duration.ofMinutes(1)))
+			.build()
+
+
+		jCacheManager.createCache(
+			DEDUPE_CACHE,
+			Eh107Configuration.fromEhcacheCacheConfiguration(dedupeCfg)
+		)
+
+		jCacheManager.createCache(
+			BLACKLIST_CACHE,
+			Eh107Configuration.fromEhcacheCacheConfiguration(blacklistCfg)
+		)
+
+		jCacheManager.createCache(
+			DB_ROW_CACHE,
+			Eh107Configuration.fromEhcacheCacheConfiguration(dbRowCfg)
+		)
+	}
+
+	@Bean
+	fun cacheManager(): org.springframework.cache.CacheManager {
+		// Spring's JCacheCacheManager wraps the javax.cache.CacheManager
+		return JCacheCacheManager(jCacheManager)
+	}
+
+	@PreDestroy
+	fun shutdown() {
+		try {
+			jCacheManager.close()
+		} catch (ex: Exception) {
+			println("Warning: error while closing jCacheManager: ${ex.message}")
+		}
+	}
+}
+

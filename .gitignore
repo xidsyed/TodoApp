@@ -38,3 +38,10 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+
+### Cache Persistence ###
+.data/
+
+# SECRETS!
+src/main/resources/secrets.yaml

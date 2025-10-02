@@ -2,16 +2,34 @@ spring:
   application:
     name: todoapp
 
+  main:
+    lazy-initialization: true
+
+
+  config:
+    import: secrets.yaml
+
   r2dbc:
     url: r2dbc:postgresql://localhost:54322/postgres
-    username: postgres
-    password: postgres
   r2dbc.pool:
     enabled: true
-    initial-size: 4
-    max-size: 10
-    max-idle-time: 30m
-    max-life-time: 1h
+    initial-size: 2
+    max-size: 4
+    max-idle-time: 5m
+    max-life-time: 30h
+    validation-query: SELECT 1
+    max-validation-time: 1s
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # This tells Spring where to fetch the public keys
+          jwk-set-uri: http://localhost:54321/auth/v1/.well-known/jwks.json
+          # This tells Spring to validate the 'iss' claim in the JWT. Enable once Hosted.
+          # issuer-uri: https://<your-project>.supabase.co/auth/v1
+          # Optional audience validation
+          # audiences: my-api-audience
 
 
   jackson:

@@ -23,7 +23,7 @@ class PersistedCacheImpl<K : Any, V : Any>(
 	private val keySerializer: Serializer<K>,
 	private val valueSerializer: Serializer<V>,
 	defaultDuration: Duration? = 24.hours,
-	val cacheSize: Long = 1000_000L,
+	val cacheSize: Long = 100_000L,
 	dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : PersistedCache<K, V> {
 
@@ -72,17 +72,7 @@ class PersistedCacheImpl<K : Any, V : Any>(
 
 
 	init {
-		scope.launch {
-			persistence.deleteExpiredByCache(cacheId)                // ensure all expired entries have been deleted
-			persistence.findByCache(cacheId).map { entity ->        // restore cache from persistance
-				keySerializer.deserialize(entity.key) to entity.toCacheValue()
-			}.collect { (key, value) ->
-				cache.asMap().compute(key) { _, existingValue ->
-					// only over-write if mapping is absent
-					return@compute existingValue ?: CompletableFuture.completedFuture(value)
-				}
-			}
-		}
+		attemptCacheRestore()
 	}
 
 	override suspend fun put(k: K, v: V, duration: Duration?) {
@@ -102,8 +92,23 @@ class PersistedCacheImpl<K : Any, V : Any>(
 
 
 	override suspend fun remove(k: K) {
+		if(cache.getIfPresent(k) == null) return
 		persistence.deleteById(keySerializer.serialize(k), cacheId)
 		cache.asMap().remove(k)
+	}
+
+	private fun attemptCacheRestore() {
+		scope.launch {
+			persistence.deleteExpiredByCache(cacheId)                // ensure all expired entries have been deleted
+			persistence.findByCache(cacheId).map { entity ->        // restore cache from persistance
+				keySerializer.deserialize(entity.key) to entity.toCacheValue()
+			}.collect { (key, value) ->
+				cache.asMap().compute(key) { _, existingValue ->
+					// only over-write if mapping is absent
+					return@compute existingValue ?: CompletableFuture.completedFuture(value)
+				}
+			}
+		}
 	}
 
 	private suspend fun createEntity(key: K, value: V, duration: Duration?): KvCacheEntity {

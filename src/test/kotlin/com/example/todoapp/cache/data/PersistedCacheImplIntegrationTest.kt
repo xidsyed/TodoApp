@@ -266,7 +266,6 @@ class PersistedCacheImplIntegrationTest @Autowired constructor(
 	}
 
 	@Test
-	@Disabled("This test is purely for obtaining a rough approximation of the cache's performance ")
 	fun `cache performance`() = runBlocking {
 		val cache = makeCache("performance-cache")
 		val durationSeconds = 3

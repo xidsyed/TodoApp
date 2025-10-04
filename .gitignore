@@ -41,7 +41,7 @@ out/
 
 
 ### Cache Persistence ###
-.data/
+data/
 
 # SECRETS!
 src/main/resources/secrets.yaml

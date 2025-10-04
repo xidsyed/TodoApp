@@ -34,6 +34,6 @@ class TempTest @Autowired constructor(
 			expireAt = OffsetDateTime.now(),
 		))
 
-		testLog(cacheRepo.findAll("cache1").toList())
+		testLog(cacheRepo.findByCache("cache1").toList())
 	}
 }

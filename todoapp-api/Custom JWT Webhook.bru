@@ -1,0 +1,29 @@
+meta {
+  name: Custom JWT Webhook
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/auth/hooks/custom_access_token
+  body: text
+  auth: inherit
+}
+
+headers {
+  webhook-id: 2
+  webhook-signature: v1,/NVY6qoBLKhZXaLUeHNIRwR5XQjmMt5BsCK/Ih/npVw=
+  webhook-timestamp: 1759857222
+}
+
+body:json {
+  hi
+}
+
+body:text {
+  "hi"
+}
+
+settings {
+  encodeUrl: true
+}

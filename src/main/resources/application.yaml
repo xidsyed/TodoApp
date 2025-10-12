@@ -3,7 +3,8 @@ spring:
     name: todoapp
 
   main:
-    lazy-initialization: true
+    lazy-initialization: false
+
 
 
   config:
@@ -34,6 +35,8 @@ spring:
 
   jackson:
     property-naming-strategy: SNAKE_CASE
+    deserialization:
+      fail-on-unknown-properties: false
 
 server:
   port: 8080
@@ -41,3 +44,9 @@ server:
 logging:
   level:
     root: INFO
+
+app:
+  logging:
+    requests:
+      enabled: true
+      max-body-bytes: 4096

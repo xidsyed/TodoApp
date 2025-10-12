@@ -1,0 +1,23 @@
+meta {
+  name: Create Invitation
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/invitations
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "role" : "writer",
+    "expires_at": "2025-10-25T00:00:00Z",
+    "email" : "john_doe@gmail.com"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

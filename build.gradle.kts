@@ -42,9 +42,9 @@ dependencies {
 	// Validation for DTOs
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 
-	// jackson kotlin
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-
+	// jackson
+	implementation("tools.jackson.core:jackson-databind:3.0.0")
+	implementation("tools.jackson.module:jackson-module-kotlin:3.0.0")
 	// kotlin spring
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")

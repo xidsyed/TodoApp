@@ -26,7 +26,7 @@ class SecurityConfig {
 				it.pathMatchers("/hello").permitAll()
 				it.pathMatchers("/api/newzroom/admin/**").hasRole("ADMIN")
 				it.pathMatchers("/api/newzroom/**").hasAnyRole("ADMIN", "WRITER")
-				it.pathMatchers("/invitations").permitAll()
+				it.pathMatchers("/invitation").permitAll()
 				it.pathMatchers("/auth/hooks/custom_access_token").permitAll()
 				it.anyExchange().denyAll()
 			}.oauth2ResourceServer { oauth ->

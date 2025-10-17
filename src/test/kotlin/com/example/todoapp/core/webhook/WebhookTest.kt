@@ -35,7 +35,7 @@ class WebhookTest @Autowired constructor(webhookRegistry: WebhookRegistry) {
 		}
 
 		// when & then
-		// No exception should be thrown
+		// No extension should be thrown
 		supabaseAuthWebhook.verify(payload, headers)
 		logger.debug("Successfully verified a valid webhook request.")
 	}

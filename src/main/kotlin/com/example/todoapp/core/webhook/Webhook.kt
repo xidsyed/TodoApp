@@ -77,12 +77,13 @@ class Webhook (secret : String, private val webhookIdCache: WebhookIdCache) {
 		}
 	}
 
+	@Throws(WebhookVerificationException::class)
 	suspend fun verifyAndDedupe(payload: String, headers: HttpHeaders) {
 		val webhookId = verify(payload, headers)
 		if(webhookIdCache.get(webhookId) == null) {
 			webhookIdCache.put(webhookId, true)
 		} else {
-			throw DuplicateWebhookException(webhookId)
+			throw DuplicateWebhookException(payload)
 		}
 	}
 

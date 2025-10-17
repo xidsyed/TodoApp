@@ -1,8 +1,7 @@
-package com.example.todoapp.app.auth.controller
+package com.example.todoapp.app.auth.hooks.controller
 
-import com.example.todoapp.app.auth.model.JwtAuthHookRequest
+import com.example.todoapp.app.auth.hooks.model.CustomJwtHookRequest
 import com.example.todoapp.core.webhook.*
-import com.example.todoapp.core.webhook.config.WebhookProperties
 import com.example.todoapp.core.webhook.properties.WebhookProperties
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,19 +22,31 @@ class AuthWebhookControllerTest @Autowired constructor(
     private val supabaseAuthWebhook = webhookRegistry[WebhookProperties.Source.SUPABASE]
 
     @Test
-    fun `should return 200 OK and body for a valid webhook request`() {
+    fun `should return 200 OK and body for a valid webhook request` () {
         // given
-        val request = JwtAuthHookRequest(
+        val request = CustomJwtHookRequest(
             userId = "user-id-123",
-            claims= JwtAuthHookRequest.Claims(
-				aud = "authenticated",
-				role = "authenticated",
-				email = "test@example.com",
-				iat = Clock.systemUTC().instant().epochSecond.toInt(),
-				exp = Clock.systemUTC().instant().plus(10, ChronoUnit.DAYS).epochSecond.toInt(),
-				isAnonymous = false,
-				sessionId = "random_string",
+            claims= CustomJwtHookRequest.Claims(
+				iss = "test",
 				sub = "user-id-123",
+				aud = "authenticated",
+				exp = Clock.systemUTC().instant().plus(10, ChronoUnit.DAYS).epochSecond.toInt(),
+				iat = Clock.systemUTC().instant().epochSecond.toInt(),
+				aal = "aal1",
+				email = "test@example.com",
+				phone = "",
+				role = "authenticated",
+				sessionId = "random_string",
+				isAnonymous = false,
+				appMetadata = CustomJwtHookRequest.Claims.AppMetadata(
+					provider = "email",
+					providers = listOf("email")
+				),
+				userMetadata = CustomJwtHookRequest.Claims.UserMetadata(
+					avatarUrl = "https://example.com/avatar.png",
+					fullName = "Test User",
+					picture = "https://example.com/avatar.png"
+				)
 			),
 			authenticationMethod = "password"
         )
@@ -58,17 +69,29 @@ class AuthWebhookControllerTest @Autowired constructor(
     @Test
     fun `should return 400 Bad Request for an invalid webhook signature`() {
         // given
-		val request = JwtAuthHookRequest(
+		val request = CustomJwtHookRequest(
 			userId = "user-id-123",
-			claims= JwtAuthHookRequest.Claims(
-				aud = "authenticated",
-				role = "authenticated",
-				email = "test@example.com",
-				iat = Clock.systemUTC().instant().epochSecond.toInt(),
-				exp = Clock.systemUTC().instant().plus(10, ChronoUnit.DAYS).epochSecond.toInt(),
-				isAnonymous = false,
-				sessionId = "random_string",
+			claims= CustomJwtHookRequest.Claims(
+				iss = "test",
 				sub = "user-id-123",
+				aud = "authenticated",
+				exp = Clock.systemUTC().instant().plus(10, ChronoUnit.DAYS).epochSecond.toInt(),
+				iat = Clock.systemUTC().instant().epochSecond.toInt(),
+				aal = "aal1",
+				email = "test@example.com",
+				phone = "",
+				role = "authenticated",
+				sessionId = "random_string",
+				isAnonymous = false,
+				appMetadata = CustomJwtHookRequest.Claims.AppMetadata(
+					provider = "email",
+					providers = listOf("email")
+				),
+				userMetadata = CustomJwtHookRequest.Claims.UserMetadata(
+					avatarUrl = "https://example.com/avatar.png",
+					fullName = "Test User",
+					picture = "https://example.com/avatar.png"
+				)
 			),
 			authenticationMethod = "password"
 		)

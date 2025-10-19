@@ -1,7 +1,7 @@
 package com.example.todoapp.app.invitation
 
 import com.example.todoapp.app.invitation.entity.InvitationEntity
-import com.example.todoapp.common.data.entity.NewzroomRoleEntity
+import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*

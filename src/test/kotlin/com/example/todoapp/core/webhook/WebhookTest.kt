@@ -5,7 +5,7 @@ import com.example.todoapp.core.webhook.Webhook.Companion.UNBRANDED_MSG_ID_KEY
 import com.example.todoapp.core.webhook.Webhook.Companion.UNBRANDED_MSG_SIGNATURE_KEY
 import com.example.todoapp.core.webhook.Webhook.Companion.UNBRANDED_MSG_TIMESTAMP_KEY
 import com.example.todoapp.core.webhook.exception.WebhookVerificationException
-import com.example.todoapp.core.webhook.properties.WebhookProperties
+import com.example.todoapp.core.webhook.properties.WebhookSource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -14,7 +14,7 @@ import kotlin.test.*
 
 @SpringBootTest
 class WebhookTest @Autowired constructor(webhookRegistry: WebhookRegistry) {
-	val supabaseAuthWebhook = webhookRegistry[WebhookProperties.Source.SUPABASE]
+	val supabaseAuthWebhook = webhookRegistry[WebhookSource.SUPABASE]
 
 	private val logger = LoggerFactory.getLogger(WebhookTest::class.java)
 

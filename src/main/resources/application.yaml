@@ -5,7 +5,9 @@ spring:
   main:
     lazy-initialization: false
 
-
+  devtools:
+    livereload:
+      enabled: true
 
   config:
     import: secrets.yaml
@@ -25,6 +27,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
+          jws-algorithms:
+            - ES256
           # This tells Spring where to fetch the public keys
           jwk-set-uri: http://localhost:54321/auth/v1/.well-known/jwks.json
           # This tells Spring to validate the 'iss' claim in the JWT. Enable once Hosted.
@@ -43,10 +47,9 @@ server:
 
 logging:
   level:
-    root: INFO
+    root: info
 
 app:
   logging:
-    requests:
-      enabled: true
-      max-body-bytes: 4096
+    enabled: true
+    max-body-bytes: 4096

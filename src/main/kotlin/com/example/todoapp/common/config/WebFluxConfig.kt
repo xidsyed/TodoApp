@@ -16,6 +16,4 @@ class WebFluxConfig ( private val jsonMapper: JsonMapper) : WebFluxConfigurer {
 			maxInMemorySize(2 * 1024 * 1024) // 2MB buffer for JSON bodies
 		}
 	}
-
 }
-

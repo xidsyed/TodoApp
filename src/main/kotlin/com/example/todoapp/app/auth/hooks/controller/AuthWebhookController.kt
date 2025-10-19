@@ -1,8 +1,9 @@
 package com.example.todoapp.app.auth.hooks.controller
 
-import com.example.todoapp.app.auth.hooks.model.CustomJwtHookRequest
+import com.example.todoapp.app.auth.hooks.model.JwtPayload
+import com.example.todoapp.app.auth.roles.data.model.NewzroomRole
 import com.example.todoapp.core.webhook.WebhookRegistry
-import com.example.todoapp.core.webhook.properties.WebhookProperties
+import com.example.todoapp.core.webhook.properties.WebhookSource
 import org.slf4j.LoggerFactory
 import org.springframework.http.*
 import org.springframework.web.bind.annotation.*
@@ -17,7 +18,7 @@ class AuthWebhookController(
 ) {
 
 	private val logger = LoggerFactory.getLogger(AuthWebhookController::class.java)
-	val supabaseAuthWebhook = webhookRegistry[WebhookProperties.Source.SUPABASE]
+	val supabaseAuthWebhook = webhookRegistry[WebhookSource.SUPABASE]
 
 	@PostMapping("/custom_access_token")
 	suspend fun postCustomAccessToken(
@@ -25,13 +26,8 @@ class AuthWebhookController(
 		@RequestHeader headers: HttpHeaders
 	): ResponseEntity<Any> {
 		supabaseAuthWebhook.verifyAndDedupe(payload, headers)
-		val request = jsonMapper.readValue<CustomJwtHookRequest>(payload)
-
-		// return `payload` instead of mapped `request` object to ensure all properties are returned intact
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.contentType(MediaType.APPLICATION_JSON)
-			.body(payload)
+		val request = jsonMapper.readValue<JwtPayload>(payload)
+		return ResponseEntity.ok(request.copy(claims = request.claims.copy(appRole = NewzroomRole.ADMIN)))
 	}
 
 	@PostMapping("/before_user_created")
@@ -40,6 +36,8 @@ class AuthWebhookController(
 		@RequestHeader headers: HttpHeaders
 	): ResponseEntity<Any> {
 		supabaseAuthWebhook.verifyAndDedupe(payload, headers)
+		val request = jsonMapper.readValue<JwtPayload>(payload)
+
 
 		// check if invitation token is valid
 		/*

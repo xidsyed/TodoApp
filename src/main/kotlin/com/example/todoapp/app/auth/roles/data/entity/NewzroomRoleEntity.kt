@@ -1,4 +1,4 @@
-package com.example.todoapp.common.data.entity
+package com.example.todoapp.app.auth.roles.data.entity
 
 enum class NewzroomRoleEntity(val value: String) {
 	WRITER("writer"),

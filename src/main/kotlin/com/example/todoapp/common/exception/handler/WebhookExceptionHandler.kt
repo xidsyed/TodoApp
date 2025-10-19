@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
-class WebhookControllerAdvice {
+class WebhookExceptionHandler {
 
-    private val logger = LoggerFactory.getLogger(WebhookControllerAdvice::class.java)
+    private val logger = LoggerFactory.getLogger(WebhookExceptionHandler::class.java)
 
     @ExceptionHandler(DuplicateWebhookException::class)
     fun handleDuplicateWebhookException(ex: DuplicateWebhookException): ResponseEntity<Any> {

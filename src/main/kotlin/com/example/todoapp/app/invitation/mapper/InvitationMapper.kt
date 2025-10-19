@@ -3,7 +3,7 @@ package com.example.todoapp.app.invitation.mapper
 import com.example.todoapp.app.invitation.entity.InvitationEntity
 import com.example.todoapp.app.invitation.model.InvitationDto
 import com.example.todoapp.app.users.model.UserDto
-import com.example.todoapp.common.mapper.dto
+import com.example.todoapp.app.auth.roles.data.mapper.dto
 
 fun  InvitationEntity.dto(createdBy: UserDto, assignedTo: UserDto?)  = InvitationDto(
 	id = this.id,

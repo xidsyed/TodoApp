@@ -1,16 +1,20 @@
 package com.example.todoapp.common.controller
 
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
 import org.slf4j.LoggerFactory
+import org.springframework.http.*
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
+import org.springframework.web.bind.annotation.*
 
 @RestController
-class HelloController {
+@EnableReactiveMethodSecurity
+@RequestMapping("/hello")
+class HelloController{
 	private val logger = LoggerFactory.getLogger(HelloController::class.java)
 
-	@GetMapping("/hello")
-	fun hello(@RequestParam(required = false) name: String?): Map<String, String> {
-		return mapOf("message" to "Hello ${name?:""}!")
+	@GetMapping("")
+	suspend fun hello(
+		@RequestParam(required = false) name: String?,
+	): ResponseEntity<Map<String, String>> {
+		return ResponseEntity.status(HttpStatus.OK).body(mapOf("message" to "Hello ${name ?: ""}!"))
 	}
 }

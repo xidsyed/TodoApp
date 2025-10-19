@@ -1,8 +1,8 @@
 package com.example.todoapp.app.auth.hooks.controller
 
-import com.example.todoapp.app.auth.hooks.model.CustomJwtHookRequest
+import com.example.todoapp.app.auth.hooks.model.JwtPayload
 import com.example.todoapp.core.webhook.*
-import com.example.todoapp.core.webhook.properties.WebhookProperties
+import com.example.todoapp.core.webhook.properties.WebhookSource
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -19,14 +19,14 @@ class AuthWebhookControllerTest @Autowired constructor(
 	private val jsonMapper : JsonMapper,
 	webhookRegistry: WebhookRegistry
 ) {
-    private val supabaseAuthWebhook = webhookRegistry[WebhookProperties.Source.SUPABASE]
+    private val supabaseAuthWebhook = webhookRegistry[WebhookSource.SUPABASE]
 
     @Test
     fun `should return 200 OK and body for a valid webhook request` () {
         // given
-        val request = CustomJwtHookRequest(
+        val request = JwtPayload(
             userId = "user-id-123",
-            claims= CustomJwtHookRequest.Claims(
+            claims= JwtPayload.Claims(
 				iss = "test",
 				sub = "user-id-123",
 				aud = "authenticated",
@@ -38,11 +38,11 @@ class AuthWebhookControllerTest @Autowired constructor(
 				role = "authenticated",
 				sessionId = "random_string",
 				isAnonymous = false,
-				appMetadata = CustomJwtHookRequest.Claims.AppMetadata(
+				appMetadata = JwtPayload.Claims.AppMetadata(
 					provider = "email",
 					providers = listOf("email")
 				),
-				userMetadata = CustomJwtHookRequest.Claims.UserMetadata(
+				userMetadata = JwtPayload.Claims.UserMetadata(
 					avatarUrl = "https://example.com/avatar.png",
 					fullName = "Test User",
 					picture = "https://example.com/avatar.png"
@@ -69,9 +69,9 @@ class AuthWebhookControllerTest @Autowired constructor(
     @Test
     fun `should return 400 Bad Request for an invalid webhook signature`() {
         // given
-		val request = CustomJwtHookRequest(
+		val request = JwtPayload(
 			userId = "user-id-123",
-			claims= CustomJwtHookRequest.Claims(
+			claims= JwtPayload.Claims(
 				iss = "test",
 				sub = "user-id-123",
 				aud = "authenticated",
@@ -83,11 +83,11 @@ class AuthWebhookControllerTest @Autowired constructor(
 				role = "authenticated",
 				sessionId = "random_string",
 				isAnonymous = false,
-				appMetadata = CustomJwtHookRequest.Claims.AppMetadata(
+				appMetadata = JwtPayload.Claims.AppMetadata(
 					provider = "email",
 					providers = listOf("email")
 				),
-				userMetadata = CustomJwtHookRequest.Claims.UserMetadata(
+				userMetadata = JwtPayload.Claims.UserMetadata(
 					avatarUrl = "https://example.com/avatar.png",
 					fullName = "Test User",
 					picture = "https://example.com/avatar.png"

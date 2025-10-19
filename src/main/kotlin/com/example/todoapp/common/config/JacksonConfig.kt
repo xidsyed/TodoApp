@@ -7,18 +7,6 @@ import tools.jackson.module.kotlin.*
 
 @Configuration
 class JacksonConfig {
-	/*
-	@Bean
-	@Primary
-	fun defaultObjectMapper(): ObjectMapper = jacksonObjectMapper().registerKotlinModule {
-		// https://github.com/FasterXML/jackson-module-kotlin/issues/630
-		this.configure(KotlinFeature.KotlinPropertyNameAsImplicitName, true)
-	}.apply {
-		configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-		propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
-	}
-	*/
-
 	@Bean
 	@Primary
 	fun jsonMapper(): JsonMapper =

@@ -1,7 +1,7 @@
 package com.example.todoapp.common.config
 
-import com.example.todoapp.common.data.converter.RoleEntityToStringConverter
-import com.example.todoapp.common.data.converter.StringToRoleEntityConverter
+import com.example.todoapp.app.auth.roles.data.converter.RoleEntityToStringConverter
+import com.example.todoapp.app.auth.roles.data.converter.StringToRoleEntityConverter
 import io.r2dbc.spi.ConnectionFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

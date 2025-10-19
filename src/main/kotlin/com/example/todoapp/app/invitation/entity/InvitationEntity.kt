@@ -1,6 +1,6 @@
 package com.example.todoapp.app.invitation.entity
 
-import com.example.todoapp.common.data.entity.NewzroomRoleEntity
+import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.*
 import java.time.Instant

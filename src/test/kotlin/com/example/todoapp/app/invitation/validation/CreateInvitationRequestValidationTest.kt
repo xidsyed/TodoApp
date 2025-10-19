@@ -1,7 +1,7 @@
 package com.example.todoapp.app.invitation.validation
 
 import com.example.todoapp.app.invitation.model.CreateInvitationRequest
-import com.example.todoapp.common.model.NewzroomRoleDto
+import com.example.todoapp.app.auth.roles.data.model.NewzroomRole
 import jakarta.validation.Validation
 import jakarta.validation.Validator
 import org.junit.jupiter.api.Assertions
@@ -15,7 +15,7 @@ class CreateInvitationRequestValidationTest {
     @Test
     fun `valid request passes validation`() {
         val request = CreateInvitationRequest(
-			role = NewzroomRoleDto.WRITER,
+			role = NewzroomRole.WRITER,
 			expiresAt = OffsetDateTime.now().plusDays(1).toInstant(),
 			email = "test@example.com"
 		)
@@ -26,7 +26,7 @@ class CreateInvitationRequestValidationTest {
     @Test
     fun `past expiresAt fails validation`() {
         val request = CreateInvitationRequest(
-			role = NewzroomRoleDto.WRITER,
+			role = NewzroomRole.WRITER,
 			expiresAt = OffsetDateTime.now().minusDays(1).toInstant(),
 			email = "test@example.com"
 		)
@@ -37,7 +37,7 @@ class CreateInvitationRequestValidationTest {
     @Test
     fun `invalid email fails validation`() {
         val request = CreateInvitationRequest(
-			role = NewzroomRoleDto.WRITER,
+			role = NewzroomRole.WRITER,
 			expiresAt = OffsetDateTime.now().plusDays(1).toInstant(),
 			email = "not-an-email"
 		)

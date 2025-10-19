@@ -1,12 +1,12 @@
 package com.example.todoapp.app.invitation.controller
 
+import com.example.todoapp.app.auth.roles.data.mapper.entity
 import com.example.todoapp.app.invitation.*
 import com.example.todoapp.app.invitation.entity.InvitationEntity
 import com.example.todoapp.app.invitation.mapper.dto
 import com.example.todoapp.app.invitation.model.*
 import com.example.todoapp.app.users.*
 import com.example.todoapp.app.users.mapper.dto
-import com.example.todoapp.common.mapper.*
 import jakarta.validation.Valid
 import kotlinx.coroutines.*
 import org.springframework.http.*
@@ -75,14 +75,15 @@ class InvitationController(
 	}
 
 
-	private suspend fun enrichedDtoFromEntity(entity: InvitationEntity): InvitationDto = coroutineScope {
-		entity.run{
-			val creator = async { userRepo.findById(entity.createdBy) ?: throw userNotFound(createdBy.toString()) }
-			val assigned = async {
-				assignedTo?.let { userRepo.findById(it) ?: throw userNotFound(assignedTo.toString()) }
+	private suspend fun enrichedDtoFromEntity(entity: InvitationEntity): InvitationDto =
+		entity.run {
+			coroutineScope {
+				val creator = async { userRepo.findById(entity.createdBy) ?: throw userNotFound(createdBy.toString()) }
+				val assigned = async {
+					assignedTo?.let { userRepo.findById(it) ?: throw userNotFound(assignedTo.toString()) }
+				}
+				dto(creator.await().dto(), assigned.await()?.dto())
 			}
-			dto(creator.await().dto(), assigned.await()?.dto())
 		}
-	}
 
 }

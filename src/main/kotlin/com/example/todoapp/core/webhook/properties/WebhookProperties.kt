@@ -6,9 +6,10 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @ConfigurationProperties(prefix = "webhook")
 data class WebhookProperties (
-	val sources : Map<Source, String>,
+	val sources : Map<WebhookSource, String>,
 ){
-	enum class Source(value : String) {
-		SUPABASE("supabase")
-	}
+}
+
+enum class WebhookSource(value : String) {
+	SUPABASE("supabase")
 }

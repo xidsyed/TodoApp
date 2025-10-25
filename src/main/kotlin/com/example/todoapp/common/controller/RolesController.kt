@@ -1,16 +1,11 @@
 package com.example.todoapp.common.controller
 
-import com.example.todoapp.app.auth.roles.annotations.CurrentRole
-import com.example.todoapp.app.auth.roles.annotations.RequireAdmin
-import com.example.todoapp.app.auth.roles.annotations.RequireRole
+import com.example.todoapp.app.auth.roles.annotations.*
 import com.example.todoapp.app.auth.roles.data.model.NewzroomRole
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.ok
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
-import tools.jackson.databind.json.JsonMapper
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @EnableReactiveMethodSecurity

@@ -1,4 +1,4 @@
-package com.example.todoapp.common.config
+package com.example.todoapp.common.spring.config
 
 import org.springframework.context.annotation.*
 import tools.jackson.databind.*

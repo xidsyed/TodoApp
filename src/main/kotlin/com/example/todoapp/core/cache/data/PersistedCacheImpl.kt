@@ -1,49 +1,37 @@
 package com.example.todoapp.core.cache.data
 
-import com.example.todoapp.core.cache.CachePersistenceRepository
-import com.example.todoapp.core.cache.PersistedCache
+import com.example.todoapp.core.cache.*
 import com.example.todoapp.core.cache.data.entity.KvCacheEntity
 import com.example.todoapp.core.cache.data.model.CacheValue
 import com.example.todoapp.core.serializer.Serializer
-import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.benmanes.caffeine.cache.Expiry
-import com.github.benmanes.caffeine.cache.RemovalCause
-import com.github.benmanes.caffeine.cache.RemovalListener
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import com.github.benmanes.caffeine.cache.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import org.slf4j.LoggerFactory
-import java.time.OffsetDateTime
+import java.time.*
 import java.util.concurrent.CompletableFuture
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.seconds
 
 class PersistedCacheImpl<K : Any, V : Any>(
 	private val persistence: CachePersistenceRepository,
 	val cacheId: String,
 	private val keySerializer: Serializer<K>,
 	private val valueSerializer: Serializer<V>,
-	defaultDuration: Duration? = 24.hours,
+	defaultDuration: Duration? = Duration.ofHours(24),
 	val cacheSize: Long = 100_000L,
 	dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : PersistedCache<K, V> {
 
 	private val scope = CoroutineScope(dispatcher + SupervisorJob())
 	private val logger = LoggerFactory.getLogger(this.javaClass)
-	private val _defaultDuration = defaultDuration ?: 24.hours
+	private val _defaultDuration = defaultDuration ?: Duration.ofHours(24)
 	private val caffeineExpiry = object : Expiry<K, CacheValue<V>> {
 		override fun expireAfterCreate(key: K, value: CacheValue<V>, currentTime: Long): Long =
-			value.duration?.inWholeNanoseconds ?: _defaultDuration.inWholeNanoseconds
+			value.duration?.toNanos() ?: _defaultDuration.toNanos()
 
 		override fun expireAfterUpdate(key: K, value: CacheValue<V>, currentTime: Long, currentDuration: Long): Long =
-			value.duration?.inWholeNanoseconds ?: _defaultDuration.inWholeNanoseconds
+			value.duration?.toNanos() ?: _defaultDuration.toNanos()
 
 		override fun expireAfterRead(key: K, value: CacheValue<V>, currentTime: Long, currentDuration: Long): Long =
 			currentDuration
@@ -125,7 +113,7 @@ class PersistedCacheImpl<K : Any, V : Any>(
 			key = key,
 			value = value,
 			cache = cacheId,
-			expireAt = OffsetDateTime.now().plusSeconds(duration?.inWholeSeconds ?: _defaultDuration.inWholeSeconds)
+			expireAt = OffsetDateTime.now().plusSeconds(duration?.seconds ?: _defaultDuration.seconds)
 				.toInstant(),
 		)
 	}
@@ -133,7 +121,7 @@ class PersistedCacheImpl<K : Any, V : Any>(
 	private fun KvCacheEntity.toCacheValue(): CacheValue<V> {
 		val expireAtSeconds = expireAt.epochSecond
 		val secondsNow = Clock.System.now().epochSeconds
-		val remainingDuration = (expireAtSeconds - secondsNow).seconds
+		val remainingDuration = Duration.ofSeconds(expireAtSeconds - secondsNow)
 		return CacheValue(valueSerializer.deserialize(value), remainingDuration)
 	}
 }

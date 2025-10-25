@@ -1,14 +1,10 @@
 package com.example.todoapp.core.serializer
 
-import org.springframework.beans.factory.annotation.Autowired
 import tools.jackson.core.type.TypeReference
 import tools.jackson.databind.JavaType
 import tools.jackson.databind.json.JsonMapper
 
-
-
-@Autowired
-inline fun <reified T> jacksonSerializer(
+inline fun <reified T> createJacksonSerializer(
 	mapper: JsonMapper
 ): Serializer<T> {
 	// Create a TypeReference<T> so Jackson captures generic info (List<Foo>, Map<..>, etc)

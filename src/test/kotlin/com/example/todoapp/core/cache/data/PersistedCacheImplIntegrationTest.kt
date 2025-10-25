@@ -1,8 +1,8 @@
 package com.example.todoapp.core.cache.data
 
-import com.example.todoapp.core.cache.CachePersistenceRepository
 import com.example.todoapp.TestUtils.testLog
-import com.example.todoapp.core.serializer.jacksonSerializer
+import com.example.todoapp.core.cache.CachePersistenceRepository
+import com.example.todoapp.core.serializer.createJacksonSerializer
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import org.junit.jupiter.api.AfterEach
@@ -12,12 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.r2dbc.core.DatabaseClient
 import tools.jackson.databind.json.JsonMapper
+import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.LongAdder
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.time.Duration.Companion.seconds
 
 @SpringBootTest
 class PersistedCacheImplIntegrationTest @Autowired constructor(
@@ -29,13 +29,13 @@ class PersistedCacheImplIntegrationTest @Autowired constructor(
 	// --- Helpers / constants ---
 	private data class MyTestValue(val message: String, val code: Int)
 
-	private fun stringKeySerializer() = jacksonSerializer<String>(jsonMapper)
-	private fun myValueSerializer() = jacksonSerializer<MyTestValue>(jsonMapper)
+	private fun stringKeySerializer() = createJacksonSerializer<String>(jsonMapper)
+	private fun myValueSerializer() = createJacksonSerializer<MyTestValue>(jsonMapper)
 
 	private fun makeCache(
 		cacheId: String,
 		defaultTTLSeconds: Long? = null
-	) = PersistedCacheImpl(persistence, cacheId, stringKeySerializer(), myValueSerializer(), defaultTTLSeconds?.seconds)
+	) = PersistedCacheImpl(persistence, cacheId, stringKeySerializer(), myValueSerializer(), defaultTTLSeconds?.let { Duration.ofSeconds(it) })
 
 
 	/**
@@ -144,7 +144,7 @@ class PersistedCacheImplIntegrationTest @Autowired constructor(
 		val value = MyTestValue("entry ttl", 2)
 
 		// short-lived: TTL = 2s
-		cache.put(shortLivedKey, value, 2.seconds)
+		cache.put(shortLivedKey, value, Duration.ofSeconds(2))
 		awaitUntil(timeoutMillis = 1000) { cache.get(shortLivedKey) != null } // must exist initially
 		assertNotNull(cache.get(shortLivedKey))
 
@@ -153,7 +153,7 @@ class PersistedCacheImplIntegrationTest @Autowired constructor(
 		assertNull(cache.get(shortLivedKey), "entry TTL should cause expiry")
 
 		// long-lived: TTL explicitly long so it should still be present
-		cache.put(longLivedKey, value, 10.seconds)
+		cache.put(longLivedKey, value, Duration.ofSeconds(10))
 		assertNotNull(cache.get(longLivedKey))
 	}
 
@@ -228,8 +228,8 @@ class PersistedCacheImplIntegrationTest @Autowired constructor(
 		val value = MyTestValue("will expire", 1)
 
 		cache1.put(defaultExpired, value) // uses default TTL
-		cache1.put(entryExpired, value, 2.seconds) // explicit entry TTL
-		cache1.put(freshKey, value, 10.seconds) // should remain fresh
+		cache1.put(entryExpired, value, Duration.ofSeconds(2)) // explicit entry TTL
+		cache1.put(freshKey, value, Duration.ofSeconds(10)) // should remain fresh
 
 		// Wait until in-memory expirations occur
 		awaitUntil(timeoutMillis = (defaultTtlSeconds * 1000) + 1500) {

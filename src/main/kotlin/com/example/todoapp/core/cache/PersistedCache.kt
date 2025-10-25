@@ -1,6 +1,6 @@
 package com.example.todoapp.core.cache
 
-import kotlin.time.Duration
+import java.time.Duration
 
 interface PersistedCache<K, V> {
 	suspend fun putIfAbsent(k :K, v: V, duration: Duration? = null)

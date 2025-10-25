@@ -2,12 +2,12 @@ package com.example.todoapp.core.webhook
 
 import com.example.todoapp.core.cache.*
 import com.example.todoapp.core.cache.data.PersistedCacheImpl
-import com.example.todoapp.core.serializer.jacksonSerializer
+import com.example.todoapp.core.serializer.createJacksonSerializer
 import kotlinx.coroutines.Dispatchers
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
-import kotlin.time.Duration.Companion.seconds
+import java.time.Duration
 
 
 @Component
@@ -17,9 +17,9 @@ class WebhookIdCache @Autowired constructor(
 ) : PersistedCache<String, Boolean> by PersistedCacheImpl(
 	persistence = cachePersistenceRepository,
 	cacheId = "webhook_cache",
-	keySerializer = jacksonSerializer<String>(jsonMapper),
-	valueSerializer = jacksonSerializer<Boolean>(jsonMapper),
-	defaultDuration = Webhook.TOLERANCE_IN_SECONDS.seconds,
+	keySerializer = createJacksonSerializer<String>(jsonMapper),
+	valueSerializer = createJacksonSerializer<Boolean>(jsonMapper),
+	defaultDuration = Duration.ofSeconds(Webhook.TOLERANCE_IN_SECONDS.toLong()),
 	cacheSize = 1_000_000,
 	dispatcher = Dispatchers.IO
 )

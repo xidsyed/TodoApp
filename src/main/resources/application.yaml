@@ -53,3 +53,5 @@ app:
   logging:
     enabled: true
     max-body-bytes: 4096
+  jwt-filter:
+    jwt-expiration-duration-in-seconds: 3600

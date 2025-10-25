@@ -1,6 +1,6 @@
 package com.example.todoapp.core.cache.data.model
 
-import kotlin.time.Duration
+import java.time.Duration
 
 class CacheValue<V : Any> (
 	val value : V,

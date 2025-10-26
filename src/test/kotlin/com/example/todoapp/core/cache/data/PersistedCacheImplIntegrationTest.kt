@@ -4,6 +4,7 @@ import com.example.todoapp.TestUtils.testLog
 import com.example.todoapp.core.cache.CachePersistenceRepository
 import com.example.todoapp.core.serializer.createJacksonSerializer
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.sync.Semaphore
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Disabled
@@ -34,8 +35,14 @@ class PersistedCacheImplIntegrationTest @Autowired constructor(
 
 	private fun makeCache(
 		cacheId: String,
-		defaultTTLSeconds: Long? = null
-	) = PersistedCacheImpl(persistence, cacheId, stringKeySerializer(), myValueSerializer(), defaultTTLSeconds?.let { Duration.ofSeconds(it) })
+		defaultTTLSeconds: Long = 3600L
+	) = PersistedCacheImpl(
+		persistence,
+		cacheId,
+		stringKeySerializer(),
+		myValueSerializer(),
+		Duration.ofSeconds(defaultTTLSeconds)
+	)
 
 
 	/**
@@ -111,6 +118,25 @@ class PersistedCacheImplIntegrationTest @Autowired constructor(
 
 		assertNull(cache.get(toRemove), "removed key should no longer be present")
 		assertNotNull(cache.get(toKeep), "removing one key must not affect other keys")
+	}
+
+	@Test
+	fun `getAll returns a flow of all entries`() = runBlocking {
+		val cache = makeCache("get-all-cache")
+		val expectedEntries = mapOf(
+			"key1" to MyTestValue("value1", 1),
+			"key2" to MyTestValue("value2", 2),
+			"key3" to MyTestValue("value3", 3)
+		)
+
+		// Put all entries into the cache
+		expectedEntries.forEach { (k, v) ->
+			cache.put(k, v)
+		}
+
+		// Collect the flow into a map for easy comparison
+		val actualEntries = cache.getAll().toList().toMap()
+		assertEquals(expectedEntries, actualEntries, "getAll should return a flow containing all cache entries")
 	}
 
 	@Test

@@ -23,7 +23,7 @@ class AuthenticationManagerWithJwtFilter(
 				val tokenId = jwt.claims["sub"] as String
 				val iat = jwt.claims["iat"] as Instant
 				mono {
-					val isBlacklisted = jwtFilterService.isBlacklisted(tokenId, iat)
+					val isBlacklisted = jwtFilterService.isTokenValid(tokenId, iat)
 					if (isBlacklisted) throw OAuth2AuthenticationException(
 						OAuth2Error(
 							"invalid_token",

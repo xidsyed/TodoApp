@@ -6,7 +6,7 @@ import com.example.todoapp.core.cache.data.model.CacheValue
 import com.example.todoapp.core.serializer.Serializer
 import com.github.benmanes.caffeine.cache.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.future.await
 import kotlinx.datetime.Clock
 import org.slf4j.LoggerFactory
@@ -18,14 +18,14 @@ class PersistedCacheImpl<K : Any, V : Any>(
 	val cacheId: String,
 	private val keySerializer: Serializer<K>,
 	private val valueSerializer: Serializer<V>,
-	defaultDuration: Duration? = Duration.ofHours(24),
+	defaultDuration: Duration,
 	val cacheSize: Long = 100_000L,
 	dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : PersistedCache<K, V> {
 
 	private val scope = CoroutineScope(dispatcher + SupervisorJob())
 	private val logger = LoggerFactory.getLogger(this.javaClass)
-	private val _defaultDuration = defaultDuration ?: Duration.ofHours(24)
+	private val _defaultDuration = defaultDuration
 	private val caffeineExpiry = object : Expiry<K, CacheValue<V>> {
 		override fun expireAfterCreate(key: K, value: CacheValue<V>, currentTime: Long): Long =
 			value.duration?.toNanos() ?: _defaultDuration.toNanos()
@@ -82,6 +82,16 @@ class PersistedCacheImpl<K : Any, V : Any>(
 	}
 
 	override suspend fun get(k: K): V? = cache.getIfPresent(k)?.await()?.value
+	
+	override fun getAll(): Flow<Pair<K, V>> = cache.asMap().entries.asFlow()
+		.map { (key, futureValue) ->
+			key to futureValue.await().value
+		}
+
+	override suspend fun clearCache() {
+		persistence.deleteAllByCacheId(cacheId)
+		cache.asMap().clear()
+	}
 
 	override suspend fun remove(k: K) {
 		if (cache.getIfPresent(k) == null) return

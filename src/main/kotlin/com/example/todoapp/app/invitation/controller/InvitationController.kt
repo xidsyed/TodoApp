@@ -1,5 +1,6 @@
 package com.example.todoapp.app.invitation.controller
 
+import com.example.todoapp.app.auth.roles.annotations.RequireAdmin
 import com.example.todoapp.app.auth.roles.data.mapper.entity
 import com.example.todoapp.app.invitation.*
 import com.example.todoapp.app.invitation.entity.InvitationEntity
@@ -26,6 +27,7 @@ class InvitationController(
 ) {
 
 	@PostMapping("")
+	@RequireAdmin
 	suspend fun createInvitation(
 		@Valid @RequestBody request: CreateInvitationRequest,
 		@AuthenticationPrincipal jwt: Jwt

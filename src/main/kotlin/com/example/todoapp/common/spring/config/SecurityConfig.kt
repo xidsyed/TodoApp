@@ -39,6 +39,7 @@ class SecurityConfig {
 			it.pathMatchers("/hello/**").permitAll()
 			it.pathMatchers("/roles/**").permitAll()
 			it.pathMatchers("/api/newzroom/admin/**").hasRole("ADMIN")
+			it.pathMatchers("/jwt_filter/**").hasRole("ADMIN")
 			it.pathMatchers("/api/newzroom/**").hasAnyRole("ADMIN", "WRITER")
 			it.pathMatchers("/invitation").permitAll()
 			it.pathMatchers("/auth/hooks/custom_access_token").permitAll()
@@ -48,14 +49,9 @@ class SecurityConfig {
 	}
 
 	@Bean
-	fun grantedAuthoritiesConverter(): GrantedAuthoritiesConverter {
-		return GrantedAuthoritiesConverter()
-	}
-
-	@Bean
-	fun jwtAuthConverter(grantedAuthoritiesConverter: GrantedAuthoritiesConverter): ReactiveJwtAuthenticationConverterAdapter {
+	fun jwtAuthConverter(): ReactiveJwtAuthenticationConverterAdapter {
 		val delegate = JwtAuthenticationConverter().apply {
-			setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter)
+			setJwtGrantedAuthoritiesConverter(GrantedAuthoritiesConverter())
 		}
 		return ReactiveJwtAuthenticationConverterAdapter(delegate)
 	}

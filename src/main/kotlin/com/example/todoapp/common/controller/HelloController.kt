@@ -31,7 +31,7 @@ class HelloController(
 	): ResponseEntity<Map<String, String>> {
 		val userId = jwt.subject
 		val blacklistDuration = Duration.ofSeconds(30)
-		jwtFilterService.blacklist(userId, Instant.now(), blacklistDuration)
+		jwtFilterService.blacklistToken(userId, Instant.now(), blacklistDuration)
 		return ok(mapOf("message" to "blacklisted for $blacklistDuration"))
 	}
 }

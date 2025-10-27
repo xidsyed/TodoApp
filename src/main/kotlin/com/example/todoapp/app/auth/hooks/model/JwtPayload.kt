@@ -1,6 +1,7 @@
 package com.example.todoapp.app.auth.hooks.model
 
 import com.example.todoapp.app.auth.roles.data.model.NewzroomRole
+import java.util.*
 
 data class JwtPayload(
 	val authenticationMethod: String,
@@ -22,7 +23,7 @@ data class JwtPayload(
 		val amr: List<Amr>? = null,
 		val appMetadata: AppMetadata,
 		val userMetadata: UserMetadata,
-		val appRole: NewzroomRole?=null,
+		val appRole: NewzroomRole? = null,
 	) {
 		data class Amr(
 			val method: String,
@@ -45,4 +46,7 @@ data class JwtPayload(
 			)
 		}
 	}
+
+	val uuid: UUID
+		get() = UUID.fromString(userId)
 }

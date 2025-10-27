@@ -1,6 +1,5 @@
 package com.example.todoapp.core.webhook
 
-import com.example.todoapp.core.webhook.exception.DuplicateWebhookException
 import com.example.todoapp.core.webhook.exception.*
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
@@ -10,9 +9,10 @@ import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-class Webhook (secret : String, private val webhookIdCache: WebhookIdCache) {
+class Webhook(secret: String, private val webhookIdCache: WebhookIdCache) {
 	private val key: ByteArray
 	private val logger = LoggerFactory.getLogger(Webhook::class.java)
+
 	init {
 		var sec = secret
 		if (sec.startsWith(SECRET_PREFIX)) {
@@ -22,15 +22,15 @@ class Webhook (secret : String, private val webhookIdCache: WebhookIdCache) {
 	}
 
 	@Throws(WebhookVerificationException::class)
-	/**
-	 * Verifies the authenticity of a webhook payload using the provided headers.
-	 *
-	 * @param payload The raw payload string received from the webhook.
-	 * @param headers The HTTP headers of the webhook request.
-	 * @return The message ID if verification is successful.
-	 * @throws WebhookVerificationException if any part of the verification fails (e.g., missing headers, invalid signature, or timestamp issues).
-	 */
-	fun verify(payload: String, headers: HttpHeaders) : String{
+			/**
+			 * Verifies the authenticity of a webhook payload using the provided headers.
+			 *
+			 * @param payload The raw payload string received from the webhook.
+			 * @param headers The HTTP headers of the webhook request.
+			 * @return The message ID if verification is successful.
+			 * @throws WebhookVerificationException if any part of the verification fails (e.g., missing headers, invalid signature, or timestamp issues).
+			 */
+	fun verify(payload: String, headers: HttpHeaders): String {
 		val msgId = headers.getFirst(UNBRANDED_MSG_ID_KEY)
 		val msgSignature = headers.getFirst(UNBRANDED_MSG_SIGNATURE_KEY)
 		val msgTimestamp = headers.getFirst(UNBRANDED_MSG_TIMESTAMP_KEY)
@@ -54,14 +54,17 @@ class Webhook (secret : String, private val webhookIdCache: WebhookIdCache) {
 			val version = sigParts[0]
 			if (version != "v1") continue
 			val signature = sigParts[1]
-			if (MessageDigest.isEqual(signature.toByteArray(StandardCharsets.UTF_8), expectedSignature.toByteArray(StandardCharsets.UTF_8))) {
+			if (MessageDigest.isEqual(
+					signature.toByteArray(StandardCharsets.UTF_8),
+					expectedSignature.toByteArray(StandardCharsets.UTF_8)
+				)
+			) {
 				return msgId
 			}
 		}
 		throw WebhookVerificationException("No matching signature found")
 	}
 
-	@Throws(WebhookSigningException::class)
 	fun sign(msgId: String, timestamp: Long, payload: String): String {
 		try {
 			val toSign = "$msgId.$timestamp.$payload"
@@ -77,10 +80,9 @@ class Webhook (secret : String, private val webhookIdCache: WebhookIdCache) {
 		}
 	}
 
-	@Throws(WebhookVerificationException::class)
 	suspend fun verifyAndDedupe(payload: String, headers: HttpHeaders) {
 		val webhookId = verify(payload, headers)
-		if(webhookIdCache.get(webhookId) == null) {
+		return if (webhookIdCache.get(webhookId) == null) {
 			webhookIdCache.put(webhookId, true)
 		} else {
 			throw DuplicateWebhookException(payload)

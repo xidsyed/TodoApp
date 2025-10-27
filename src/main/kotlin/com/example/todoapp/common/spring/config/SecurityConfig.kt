@@ -38,11 +38,14 @@ class SecurityConfig {
 		}.authorizeExchange {
 			it.pathMatchers("/hello/**").permitAll()
 			it.pathMatchers("/roles/**").permitAll()
+			it.pathMatchers("/internal/**").hasRole("ADMIN")
 			it.pathMatchers("/api/newzroom/admin/**").hasRole("ADMIN")
 			it.pathMatchers("/jwt_filter/**").hasRole("ADMIN")
-			it.pathMatchers("/api/newzroom/**").hasAnyRole("ADMIN", "WRITER")
-			it.pathMatchers("/invitation").permitAll()
-			it.pathMatchers("/auth/hooks/custom_access_token").permitAll()
+			it.pathMatchers("/invitation/**").permitAll()
+			it.pathMatchers("/auth/hooks/**").permitAll()
+			it.pathMatchers("/swagger-ui/**").permitAll() // TODO : GUARD THESE ENDPOINTS WITH A PASSWORD
+			it.pathMatchers("/v3/api-docs/**").permitAll() // TODO : GUARD THESE ENDPOINTS WITH A PASSWORD
+			it.pathMatchers("/v3/api-docs.yaml/**").permitAll() // TODO : GUARD THESE ENDPOINTS WITH A PASSWORD
 			it.anyExchange().denyAll()
 		}.oauth2ResourceServer { oauth -> oauth.jwt { it.authenticationManager(reactiveAuthenticationManager) } }
 		return http.build()

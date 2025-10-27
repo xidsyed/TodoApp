@@ -1,7 +1,8 @@
 package com.example.todoapp.common.validation
 
 import jakarta.validation.Validation
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import kotlin.test.Test
 
 @AtLeastOneFieldNotNull
@@ -9,7 +10,6 @@ private data class TestAtLeastOneFieldNotNull(
 	val role: String? = null,
 	val expiresAt: String? = null,
 	val email: String? = null,
-	val revokedAt: String? = null
 )
 
 class AtLeastOneFieldNotNullValidatorTest {

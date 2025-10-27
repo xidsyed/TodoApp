@@ -20,7 +20,7 @@ class JwtFilterServiceTest {
         val sub = "user1"
         val iat = Instant.now()
 
-        val isBlacklisted = jwtFilterService.isTokenValid(sub, iat)
+        val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, iat)
 
         assertFalse(isBlacklisted)
     }
@@ -30,8 +30,8 @@ class JwtFilterServiceTest {
         val sub = "user2"
         val iat = Instant.now()
 
-        jwtFilterService.blacklistToken(sub, iat)
-        val isBlacklisted = jwtFilterService.isTokenValid(sub, iat)
+        jwtFilterService.blacklistOldTokensForSub(sub, iat)
+        val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, iat)
 
         assertTrue(isBlacklisted)
     }
@@ -42,8 +42,8 @@ class JwtFilterServiceTest {
         val minIat = Instant.now()
         val newTokenIat = minIat.plus(1, ChronoUnit.SECONDS)
 
-        jwtFilterService.blacklistToken(sub, minIat)
-        val isBlacklisted = jwtFilterService.isTokenValid(sub, newTokenIat)
+        jwtFilterService.blacklistOldTokensForSub(sub, minIat)
+        val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, newTokenIat)
 
         assertFalse(isBlacklisted)
     }
@@ -54,8 +54,8 @@ class JwtFilterServiceTest {
         val minIat = Instant.now()
         val oldTokenIat = minIat.minus(1, ChronoUnit.SECONDS)
 
-        jwtFilterService.blacklistToken(sub, minIat)
-        val isBlacklisted = jwtFilterService.isTokenValid(sub, oldTokenIat)
+        jwtFilterService.blacklistOldTokensForSub(sub, minIat)
+        val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, oldTokenIat)
 
         assertTrue(isBlacklisted)
     }

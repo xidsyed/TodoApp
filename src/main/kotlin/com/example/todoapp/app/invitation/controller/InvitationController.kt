@@ -1,91 +1,115 @@
 package com.example.todoapp.app.invitation.controller
 
-import com.example.todoapp.app.auth.roles.annotations.RequireAdmin
 import com.example.todoapp.app.auth.roles.data.mapper.entity
 import com.example.todoapp.app.invitation.*
 import com.example.todoapp.app.invitation.entity.InvitationEntity
 import com.example.todoapp.app.invitation.mapper.dto
 import com.example.todoapp.app.invitation.model.*
-import com.example.todoapp.app.users.*
-import com.example.todoapp.app.users.mapper.dto
+import com.example.todoapp.app.users.UserRepository
+import com.example.todoapp.common.util.*
 import jakarta.validation.Valid
-import kotlinx.coroutines.*
-import org.springframework.http.*
+import kotlinx.coroutines.flow.*
+import org.springframework.http.HttpStatus.*
+import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.server.ResponseStatusException
+import java.time.*
+import java.time.temporal.ChronoUnit
 import java.util.*
 
+
+
 @RestController
-@RequestMapping("/invitation")
+@RequestMapping(InvitationController.INVITATION_PATH)
 @Validated
 class InvitationController(
 	private val userRepo: UserRepository,
 	private val invitationRepo: InvitationRepository,
+	private val invitationViewRepo: InvitationViewRepository
 ) {
 
+	companion object {
+		const val INVITATION_PATH = "/invitation"
+	}
+
+	private val log = logger()
+
 	@PostMapping("")
-	@RequireAdmin
 	suspend fun createInvitation(
 		@Valid @RequestBody request: CreateInvitationRequest,
 		@AuthenticationPrincipal jwt: Jwt
 	): ResponseEntity<InvitationDto> {
-		val userId = UUID.fromString(jwt.subject)
-		val invitationEntity = invitationRepo.save(
+		val assignorUuid = UUID.fromString(jwt.subject)
+		if (userRepo.findByEmail(request.email) != null) throw err(CONFLICT, "User already exists")
+		if (!isValidExpiration(request.expiresAt)) throw err(
+			BAD_REQUEST, "Expiration time must be between 1 and 24 hours from now"
+		)
+
+		val createdInvitation = invitationRepo.save(
 			InvitationEntity(
-				email = request.email, eat = request.expiresAt, role = request.role.entity(), createdBy = userId
+				email = request.email,
+				eat = request.expiresAt,
+				role = request.role.entity(),
+				assignor = assignorUuid
 			)
 		)
-		val response = enrichedDtoFromEntity(invitationEntity)
-		return ResponseEntity.status(HttpStatus.CREATED).body(response)
+		val invitationView = invitationViewRepo.findViewById(createdInvitation.id!!)
+		return res(CREATED, invitationView!!.dto())
 	}
 
-	// update invitation
-	@PatchMapping("/{id}")
-	suspend fun updateInvitation(
-		@PathVariable id: UUID,
-		@Valid @RequestBody request: UpdateInvitationRequest,
-		@AuthenticationPrincipal jwt: Jwt
-	): ResponseEntity<InvitationDto> {
-		val userId = UUID.fromString(jwt.subject)
+	@GetMapping("/{id}")
+	suspend fun getInvitation(@PathVariable id: UUID): InvitationDto {
+		return invitationViewRepo.findViewById(id)?.dto() ?: throw invitationNotFound(id.toString())
+	}
 
-		val existingInvitationEntity = invitationRepo.findById(id) ?: throw invitationNotFound(id.toString())
-		existingInvitationEntity.apply {
-			if (revokedAt != null) throw ResponseStatusException(
-				HttpStatus.BAD_REQUEST,
-				"Invitation has already been revoked"
-			)
-			if (assignedTo != null) throw ResponseStatusException(
-				HttpStatus.BAD_REQUEST,
+	@GetMapping("/all")
+	suspend fun getAllInvitations(): Flow<InvitationDto> {
+		return invitationViewRepo.findViewAll().map { it.dto() }
+	}
+
+	@PatchMapping("/{id}")
+	suspend fun patchInvitation(
+		@PathVariable id: UUID,
+		@Valid @RequestBody patch: PatchInvitationRequest,
+	): ResponseEntity<InvitationDto> {
+
+		val existingInvitation = invitationRepo.findById(id)?.apply {
+			if (assignee != null) throw err(
+				BAD_REQUEST,
 				"Invitation has already been assigned"
 			)
-			if (createdBy != userId) throw ResponseStatusException(HttpStatus.FORBIDDEN)
-		}
+		} ?: throw invitationNotFound(id.toString())
 
-		val updatedInvitation = existingInvitationEntity.copy(
-			role = request.role?.entity() ?: existingInvitationEntity.role,
-			eat = request.expiresAt ?: existingInvitationEntity.eat,
-			email = request.email ?: existingInvitationEntity.email,
-			revokedAt = request.revokedAt,
+		if (existingInvitation.eat <= Instant.now()) throw err(
+			BAD_REQUEST,
+			"Invitation has already expired"
 		)
 
-		val savedInvitation = invitationRepo.save(updatedInvitation)
-		val response = enrichedDtoFromEntity(savedInvitation)
-		return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(response)
+		val updatedInvitation = existingInvitation.applyPatch(patch)
+
+		invitationRepo.save(updatedInvitation)
+		val savedInvitation = invitationViewRepo.findViewById(id)?.dto() ?: throw invitationNotFound(id.toString())
+		return res(OK, savedInvitation)
 	}
 
+	@DeleteMapping("/{id}")
+	suspend fun deleteInvitation(
+		@PathVariable id: UUID
+	): ResponseEntity<Unit> {
+		val invitation = invitationRepo.findById(id) ?: throw invitationNotFound(id.toString())
+		if (invitation.assignee != null) throw err(
+			FORBIDDEN,
+			"Invitation has been assigned"
+		)
+		invitationRepo.deleteById(id)
+		return res(NO_CONTENT)
+	}
 
-	private suspend fun enrichedDtoFromEntity(entity: InvitationEntity): InvitationDto =
-		entity.run {
-			coroutineScope {
-				val creator = async { userRepo.findById(entity.createdBy) ?: throw userNotFound(createdBy.toString()) }
-				val assigned = async {
-					assignedTo?.let { userRepo.findById(it) ?: throw userNotFound(assignedTo.toString()) }
-				}
-				dto(creator.await().dto(), assigned.await()?.dto())
-			}
-		}
+	private suspend fun isValidExpiration(eat: Instant): Boolean {
+		return eat.isBefore(Instant.now().plus(Duration.ofHours(24))) &&
+				eat.isAfter(Instant.now().plus(1, ChronoUnit.HOURS))
+	}
 
 }

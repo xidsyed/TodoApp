@@ -33,8 +33,6 @@ dependencies {
 	runtimeOnly("org.postgresql:postgresql")
 	runtimeOnly("org.postgresql:r2dbc-postgresql")
 
-
-
 	// Security
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -45,22 +43,27 @@ dependencies {
 	// jackson
 	implementation("tools.jackson.core:jackson-databind:3.0.0")
 	implementation("tools.jackson.module:jackson-module-kotlin:3.0.0")
+
+	// caching
+	implementation("org.springframework.boot:spring-boot-starter-cache")
+	implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
+
 	// kotlin spring
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
 	implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+	implementation("com.michael-bull.kotlin-result:kotlin-result:2.1.0")
+
+	// springdoc
+	implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.13")
 
 	// devtools
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 
 	// annotations
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-
-	// caching
-	implementation("org.springframework.boot:spring-boot-starter-cache")
-	implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
 
 	// testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -72,7 +75,7 @@ dependencies {
 
 kotlin {
 	compilerOptions {
-		freeCompilerArgs.addAll("-Xjsr305=strict",  "-Xannotation-default-target=param-property")
+		freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property", "-Xcontext-parameters")
 	}
 }
 

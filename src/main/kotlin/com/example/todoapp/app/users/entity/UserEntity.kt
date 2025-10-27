@@ -3,31 +3,32 @@ package com.example.todoapp.app.users.entity
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import org.springframework.data.annotation.Id
 import org.springframework.data.domain.Persistable
-import org.springframework.data.relational.core.mapping.Column
-import org.springframework.data.relational.core.mapping.Table
+import org.springframework.data.relational.core.mapping.*
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-@Table("newzroom_user_profiles")
+@Table("user_profiles")
 data class UserEntity(
 	@Id
 	@Column("id")
-    val userId: UUID,
+	val userId: UUID,
+	@Column("email")
+	val email: String,
 	@Column("created_at")
-    val createdAt: Instant,
+	val createdAt: Instant? = null,
 	@Column("updated_at")
-    val updatedAt: Instant,
+	val updatedAt: Instant? = null,
 	@Column("freeze_till")
-    val freezeTill: Long? = null,
+	val freezeTill: Instant? = null,
 	@Column("freeze_cause")
-    val freezeCause: String? = null,
+	val freezeCause: String? = null,
 	@Column("display_name")
-    val displayName: String,
+	val displayName: String,
 	@Column("profile_pic")
-    val profilePic: String? = null,
+	val profilePic: String? = null,
 	@Column("role")
-    val role: NewzroomRoleEntity,
+	val role: NewzroomRoleEntity,
 ) : Persistable<UUID> {
 	override fun getId(): UUID = userId
-	override fun isNew(): Boolean = true
+	override fun isNew(): Boolean = createdAt == null
 }

@@ -3,7 +3,8 @@ package com.example.todoapp.app.auth.jwt_filter.controller
 import com.example.todoapp.app.auth.jwt_filter.JwtFilterService
 import com.example.todoapp.app.auth.jwt_filter.model.BlacklistedTokenDto
 import com.example.todoapp.app.auth.roles.annotations.RequireAdmin
-import com.example.todoapp.app.users.*
+import com.example.todoapp.app.users.UserRepository
+import com.example.todoapp.app.users.exception.UserNotFoundEx
 import kotlinx.coroutines.flow.*
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.ok
@@ -26,8 +27,8 @@ class JwtFilterController(
 		@RequestParam("sub") sub: String
 	): ResponseEntity<BlacklistedTokenDto> {
 		val userId = UUID.fromString(sub)
-		userRepository.findById(userId) ?: throw userNotFound(userId.toString())
-		jwtFilterService.blacklistToken(sub, Instant.now())
+		userRepository.findById(userId) ?: throw UserNotFoundEx(userId)
+		jwtFilterService.blacklistOldTokensForSub(sub, Instant.now())
 		return ok(BlacklistedTokenDto(sub, Instant.now().epochSecond))
 	}
 

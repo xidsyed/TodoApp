@@ -7,19 +7,17 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 
-@Table("invitation")
+@Table("invitations")
 data class InvitationEntity(
 	@Id
     var id: UUID? = null,
 	val email: String,
-	@Column("created_by")
-    val createdBy: UUID,
+	@Column("assignor")
+    val assignor: UUID,
 	val role: NewzroomRoleEntity,
 	val eat: Instant,
-	@Column("revoked_at")
-    val revokedAt: Instant? = null,
-	@Column("assigned_to")
-    val assignedTo: UUID? = null,
+	@Column("assignee")
+    val assignee: UUID? = null,
 	@Column("created_at")
     val createdAt: Instant = Instant.now().truncatedTo(ChronoUnit.MICROS),
 	@Column("updated_at")

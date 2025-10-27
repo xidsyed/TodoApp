@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpHeaders
+import java.util.*
 import kotlin.test.*
 
 @SpringBootTest
@@ -22,7 +23,7 @@ class WebhookTest @Autowired constructor(webhookRegistry: WebhookRegistry) {
 	fun `should successfully verify a valid webhook request`() {
 		// given
 		val payload = """{"message":"hello world"}"""
-		val webhookId = "wh_12345"
+		val webhookId = UUID.randomUUID().toString()
 		val timestamp = System.currentTimeMillis() / 1000
 
 		val signature = supabaseAuthWebhook.sign(webhookId, timestamp, payload)

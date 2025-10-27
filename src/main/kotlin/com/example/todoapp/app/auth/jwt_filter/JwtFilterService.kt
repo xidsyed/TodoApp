@@ -25,19 +25,16 @@ class JwtFilterService(
 		dispatcher = Dispatchers.IO
 	)
 
-	suspend fun isTokenValid(sub: String, iat: Instant): Boolean {
+	suspend fun isTokenBlacklistedBySub(sub: String, iat: Instant): Boolean {
 		val minIat = cache.get(sub)
 		val tokenNotBlacklisted = minIat == null
-		val tokenIssuedAfterMinIat = !tokenNotBlacklisted && iat > minIat
-		return !(tokenNotBlacklisted || tokenIssuedAfterMinIat)
+		val tokenIsNow = !tokenNotBlacklisted && iat > minIat
+		return !(tokenNotBlacklisted || tokenIsNow)
 	}
 
-	suspend fun blacklistToken(sub: String, minIat: Instant = Instant.now(), duration: Duration? = null) {
+	suspend fun blacklistOldTokensForSub(sub: String, minIat: Instant = Instant.now(), duration: Duration? = null) {
 		cache.put(sub, minIat, duration)
 	}
 
 	suspend fun fetchAllTokens() = cache.getAll()
-
-
-
 }

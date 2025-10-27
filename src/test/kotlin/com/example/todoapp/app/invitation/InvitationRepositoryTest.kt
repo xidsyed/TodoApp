@@ -1,45 +1,75 @@
 package com.example.todoapp.app.invitation
 
-import com.example.todoapp.app.invitation.entity.InvitationEntity
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
-import kotlinx.coroutines.flow.toList
+import com.example.todoapp.app.invitation.entity.InvitationEntity
+import com.example.todoapp.app.users.UserRepository
+import com.example.todoapp.app.users.entity.UserEntity
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.assertNotNull
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.r2dbc.core.DatabaseClient
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlin.test.*
-import kotlin.test.Test
 
 @SpringBootTest
 class InvitationRepositoryTest @Autowired constructor(
 	private val repo: InvitationRepository,
+	private val userRepository: UserRepository,
 	private val dbClient: DatabaseClient
 
 ) {
-	private val userId = UUID.fromString("e8935160-596f-48a1-a654-e10c5922e8c2")
-	private val userId2 = userId
+	private val userId1 = UUID.randomUUID()
+	private val userId2 = UUID.randomUUID()
 
-	@AfterEach
-	fun cleanup(): Unit = runBlocking {
-		dbClient.sql("TRUNCATE TABLE invitation CASCADE").then().block()
+	private val logger = LoggerFactory.getLogger(InvitationRepositoryTest::class.java)
+
+
+	@BeforeTest
+	fun setupTests() {
+		runBlocking {
+			userRepository.saveAll(
+				listOf(
+					UserEntity(
+						userId = userId1,
+						displayName = "user 1",
+						profilePic = "https://picsum.photos/id/1/200/300.jpg",
+						role = NewzroomRoleEntity.ADMIN,
+						email = "test1@example.com"
+					),
+					UserEntity(
+						userId = userId2,
+						displayName = "user 2",
+						profilePic = "https://picsum.photos/id/12/200/300.jpg",
+						role = NewzroomRoleEntity.WRITER,
+						email = "test2@example.com"
+					)
+				)
+			).collect()
+		}
 	}
 
 
+	@AfterTest
+	fun cleanup(): Unit = runBlocking {
+		dbClient.sql("TRUNCATE TABLE invitations CASCADE").then().block()
+		userRepository.deleteAllById(listOf(userId1, userId2))
+	}
 
 	@Test
 	fun `create and get invitation`(): Unit = runBlocking {
 		val invite = InvitationEntity(
-			id = null,
 			email = "iwanttosignup@email.com",
-			createdBy = userId,
+			assignor = userId1,
 			role = NewzroomRoleEntity.WRITER,
-			eat = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MICROS),
-			revokedAt = null,
-			assignedTo = null,
+			eat = Instant.now().plus(1, ChronoUnit.DAYS),
+			createdAt = Instant.now(),
+			assignee = null,
 		)
 		val savedInvite = repo.save(invite)
 		assertNotNull(savedInvite.id)
@@ -48,18 +78,17 @@ class InvitationRepositoryTest @Autowired constructor(
 	}
 
 	@Test
-	fun `create and fetch many invitations`() : Unit = runBlocking {
-		val savedList = buildList<InvitationEntity>(10) {
-			repeat(10){ index ->
+	fun `create and fetch many invitations`(): Unit = runBlocking {
+		val savedList = buildList(10) {
+			repeat(10) { index ->
 				addLast(
 					InvitationEntity(
 						id = null,
 						email = "email$index@email.com",
-						createdBy = userId,
+						assignor = userId1,
 						role = NewzroomRoleEntity.WRITER,
-						eat = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MICROS),
-						revokedAt = null,
-						assignedTo = null,
+						eat = Instant.now().plus(1, ChronoUnit.DAYS),
+						assignee = null,
 					)
 				)
 			}
@@ -69,51 +98,72 @@ class InvitationRepositoryTest @Autowired constructor(
 	}
 
 	@Test
-	fun `revoked invitations are identified as revoked`(): Unit = runBlocking {
-		val revocation = Instant.now().truncatedTo(ChronoUnit.MICROS)
-		val invite = InvitationEntity(
-			id = null,
-			email = "iwanttosignup@email.com",
-			createdBy = userId,
-			role = NewzroomRoleEntity.WRITER,
-			eat = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MICROS),
-			revokedAt = revocation,
-			assignedTo = null,
-		)
-		val savedInvite = repo.save(invite)
-		assertNotNull(savedInvite.revokedAt)
-		assertEquals(invite.revokedAt, revocation)
-	}
-
-	@Test
 	fun `assigned invitations are identified as assigned`(): Unit = runBlocking {
-		val assignedTo = userId2
+		val assignee = userId2
 		val invite = InvitationEntity(
 			id = null,
 			email = "iwanttosignup@email.com",
-			createdBy = userId,
+			assignor = userId1,
 			role = NewzroomRoleEntity.WRITER,
-			eat = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MICROS),
-			revokedAt = null,
-			assignedTo = assignedTo,
+			eat = Instant.now().plus(1, ChronoUnit.DAYS),
+			assignee = assignee,
 		)
 		val savedInvite = repo.save(invite)
-		assertEquals(savedInvite.assignedTo , assignedTo)
+		assertEquals(savedInvite.assignee, assignee)
 	}
 
 	@Test
 	fun `expired invitations are identified as expired`(): Unit = runBlocking {
-		val expiredAt = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MICROS)
+		val expiredAt = Instant.now().plus(1, ChronoUnit.DAYS)
 		val invite = InvitationEntity(
 			id = null,
 			email = "iwanttosignup@email.com",
-			createdBy = userId,
+			assignor = userId1,
 			role = NewzroomRoleEntity.WRITER,
 			eat = expiredAt,
-			revokedAt = null,
-			assignedTo = null,
+			assignee = null,
 		)
 		val savedInvite = repo.save(invite)
-		assertEquals(savedInvite.eat, expiredAt )
+		assertEquals(savedInvite.eat, expiredAt)
+	}
+
+	@Test
+	fun `cannot add invitation with eat less than or equal to current time`(): Unit = runBlocking {
+		val invite = InvitationEntity(
+			id = null,
+			email = "iwanttosignup@email.com",
+			assignor = userId1,
+			role = NewzroomRoleEntity.WRITER,
+			eat = Instant.now().minus(1, ChronoUnit.DAYS),
+			assignee = null,
+		)
+		assertFailsWith<DataIntegrityViolationException> {
+			repo.save(invite)
+		}
+	}
+
+	@Test
+	fun `cannot add two invitations with the same email`(): Unit = runBlocking {
+		val invite1 = InvitationEntity(
+			id = null,
+			email = "duplicate@email.com",
+			assignor = userId1,
+			role = NewzroomRoleEntity.WRITER,
+			eat = Instant.now().plus(1, ChronoUnit.DAYS),
+			assignee = null,
+		)
+		repo.save(invite1)
+
+		val invite2 = InvitationEntity(
+			id = null,
+			email = "duplicate@email.com",
+			assignor = userId1,
+			role = NewzroomRoleEntity.ADMIN,
+			eat = Instant.now().plus(2, ChronoUnit.DAYS),
+			assignee = null,
+		)
+		assertFailsWith<DataIntegrityViolationException> {
+			repo.save(invite2)
+		}
 	}
 }

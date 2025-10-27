@@ -1,5 +1,5 @@
 package com.example.todoapp.app.invitation
 
-import com.example.todoapp.common.exception.CommonNotFoundException
+import com.example.todoapp.common.exception.NotFoundEx
 
-fun invitationNotFound(id: String) = CommonNotFoundException("Invitation", id)
+fun invitationNotFound(id: String) = NotFoundEx("Invitation", id)

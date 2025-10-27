@@ -2,8 +2,7 @@ package com.example.todoapp.app.auth.roles.data.converter
 
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import org.springframework.core.convert.converter.Converter
-import org.springframework.data.convert.ReadingConverter
-import org.springframework.data.convert.WritingConverter
+import org.springframework.data.convert.*
 
 @WritingConverter
 class RoleEntityToStringConverter : Converter<NewzroomRoleEntity, String> {
@@ -15,6 +14,6 @@ class RoleEntityToStringConverter : Converter<NewzroomRoleEntity, String> {
 @ReadingConverter
 class StringToRoleEntityConverter : Converter<String, NewzroomRoleEntity> {
 	override fun convert(source: String): NewzroomRoleEntity {
-		return NewzroomRoleEntity.Companion.from(source)
+		return NewzroomRoleEntity.from(source)
 	}
 }

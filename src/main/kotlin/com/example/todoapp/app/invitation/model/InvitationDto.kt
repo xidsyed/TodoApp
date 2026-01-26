@@ -6,7 +6,7 @@ import java.time.Instant
 import java.util.*
 
 data class InvitationDto(
-	var id: UUID? = null,
+	val id: UUID,
 	val email: String,
 	val assignor: UserDto,
 	val role: NewzroomRole,

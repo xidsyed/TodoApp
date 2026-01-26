@@ -26,7 +26,7 @@ class Webhook(secret: String, private val webhookIdCache: WebhookIdCache) {
 			 * Verifies the authenticity of a webhook payload using the provided headers.
 			 *
 			 * @param payload The raw payload string received from the webhook.
-			 * @param headers The HTTP headers of the webhook request.
+			 * @param headers The HTTP headers of the webhook input.
 			 * @return The message ID if verification is successful.
 			 * @throws WebhookVerificationException if any part of the verification fails (e.g., missing headers, invalid signature, or timestamp issues).
 			 */

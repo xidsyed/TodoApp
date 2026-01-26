@@ -6,7 +6,7 @@ import com.example.todoapp.app.invitation.model.InvitationDto
 import com.example.todoapp.app.users.model.UserDto
 
 fun  InvitationEntity.dto(assignor: UserDto, assignee: UserDto?)  = InvitationDto(
-	id = this.id,
+	id = this.id!!,
 	email = this.email,
 	assignor = assignor,
 	assignee = assignee,

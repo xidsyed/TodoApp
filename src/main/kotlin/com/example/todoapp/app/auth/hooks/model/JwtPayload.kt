@@ -4,7 +4,7 @@ import com.example.todoapp.app.auth.roles.data.model.NewzroomRole
 import java.util.*
 
 data class JwtPayload(
-	val authenticationMethod: String,
+	val authenticationMethod: String? = null,
 	val claims: Claims,
 	val userId: String
 ) {
@@ -24,7 +24,7 @@ data class JwtPayload(
 		val appMetadata: AppMetadata,
 		val userMetadata: UserMetadata,
 		val appRole: NewzroomRole? = null,
-	) {
+		) {
 		data class Amr(
 			val method: String,
 			val timestamp: Int

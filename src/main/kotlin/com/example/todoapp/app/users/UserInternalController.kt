@@ -27,8 +27,12 @@ class UserInternalController(
 		return userService.getAllUsers().map { it.internalDto() }
 	}
 
+	@GetMapping("/search")
+	suspend fun searchUsersByNameOrEmail(@RequestParam query: String): Flow<UserInternalDto> {
+		return userService.findUserByNameOrEmail(query).map { it.internalDto() }
+	}
+
 	@GetMapping("/{id}")
-	@RequireAdmin
 	suspend fun getUserInternal(@PathVariable id: UUID): UserInternalDto {
 		return userService.getUser(id)?.internalDto() ?: throw err(NOT_FOUND, "User Not Found")
 	}

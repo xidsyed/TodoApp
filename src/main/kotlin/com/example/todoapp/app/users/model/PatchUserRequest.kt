@@ -1,16 +1,14 @@
 package com.example.todoapp.app.users.model
 
 import com.example.todoapp.app.users.entity.UserEntity
-import com.example.todoapp.common.validation.AtLeastOneFieldNotNull
-import jakarta.validation.constraints.NotBlank
-import org.hibernate.validator.constraints.URL
+import com.example.todoapp.common.validation.NullOrNotBlank
 
-@AtLeastOneFieldNotNull
+//@AtLeastOneFieldNotNull
 data class PatchUserRequest(
-	@field:NotBlank
+	@field:NullOrNotBlank
 	val name: String? = null,
-	@field:URL
-	val picture: String? = null,
+	@field:NullOrNotBlank
+	val picture: String? = null,	
 )
 
 

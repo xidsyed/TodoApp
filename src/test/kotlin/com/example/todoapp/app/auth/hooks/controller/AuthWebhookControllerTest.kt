@@ -15,8 +15,8 @@ import com.example.todoapp.core.webhook.properties.WebhookSource
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.http.*
 import org.springframework.test.web.reactive.server.WebTestClient
 import tools.jackson.databind.ObjectMapper
@@ -48,7 +48,7 @@ class AuthWebhookControllerTest @Autowired constructor(
 	@AfterTest
 	fun tearDown() = runBlocking {
 		invitationRepository.deleteAll()
-		userRepository.deleteAll()
+		userRepository.deleteAllById(listOf(ASSIGNOR_ID, ASSIGNOR_ID))
 	}
 
 	@Test

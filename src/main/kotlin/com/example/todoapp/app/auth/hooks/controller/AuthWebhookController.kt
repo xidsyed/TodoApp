@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*
 class AuthWebhookController(
 	private val authWebhookService: AuthWebhookService,
 ) {
-
 	private val log = logger()
 
 	@PostMapping("/custom_access_token")
@@ -45,10 +44,11 @@ class AuthWebhookController(
 		@RequestBody payload: String,
 		@RequestHeader headers: HttpHeaders
 	): ResponseEntity<Any> {
-		log.info("Received before_user_created webhook request")
+		log.info("Received before_user_created webhook input")
 		return authWebhookService.processBeforeUserCreatedHook(payload, headers).fold(
 			success = {
-				ok("")
+				val emptyJsonBody = mapOf<String, Any>()
+				return ok().contentType(MediaType.APPLICATION_JSON).body(emptyJsonBody)
 			},
 			failure = { err ->
 				when (err) {

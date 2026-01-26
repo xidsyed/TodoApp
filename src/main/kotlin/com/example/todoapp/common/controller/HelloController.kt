@@ -16,9 +16,10 @@ class HelloController(
 
 	@GetMapping("")
 	suspend fun hello(
-		@RequestParam(required = false) name: String?,
+		@RequestParam name: String? = "Anon",
 	): ResponseEntity<Map<String, String>> {
 		return ResponseEntity.status(HttpStatus.OK).body(mapOf("message" to "Hello ${name ?: ""}!"))
 	}
+
 
 }

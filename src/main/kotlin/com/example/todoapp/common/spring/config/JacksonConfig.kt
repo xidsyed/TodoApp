@@ -1,5 +1,6 @@
 package com.example.todoapp.common.spring.config
 
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer
 import org.springframework.context.annotation.*
 import tools.jackson.databind.*
 import tools.jackson.databind.json.JsonMapper
@@ -8,25 +9,9 @@ import tools.jackson.module.kotlin.*
 @Configuration
 class JacksonConfig {
 
-	/*
 	@Bean
 	@Primary
-	fun jsonMapper(): JsonMapper =
-		JsonMapper.builder()
-			.addModule(
-				KotlinModule.Builder()
-					.configure(KotlinFeature.KotlinPropertyNameAsImplicitName, true)
-					.build()
-			)
-			.propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-			.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-			.build()
-
-	*/
-
-	@Bean
-	@Primary
-	fun objectMapper(): ObjectMapper {
+	fun jsonMapper(): JsonMapper {
 		val kotlinModule = KotlinModule.Builder()
 			.configure(KotlinFeature.KotlinPropertyNameAsImplicitName, true)
 			.build()
@@ -38,7 +23,13 @@ class JacksonConfig {
 			.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 			.build()
 
-		return mapper // typed as ObjectMapper — important
+		return mapper
+	}
+
+	@Bean
+	fun jacksonCustomizer() = JsonMapperBuilderCustomizer { builder ->
+		builder.propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+			.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 	}
 
 

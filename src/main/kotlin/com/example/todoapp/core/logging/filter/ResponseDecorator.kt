@@ -1,15 +1,11 @@
 package com.example.todoapp.core.logging.filter
 
 import com.example.todoapp.core.logging.ServerHttpLogger
-import kotlinx.coroutines.reactor.awaitSingleOrNull
-import kotlinx.coroutines.reactor.mono
+import kotlinx.coroutines.reactor.*
 import org.reactivestreams.Publisher
-import org.springframework.core.io.buffer.DataBuffer
-import org.springframework.core.io.buffer.DataBufferUtils
-import org.springframework.http.server.reactive.ServerHttpResponse
-import org.springframework.http.server.reactive.ServerHttpResponseDecorator
-import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
+import org.springframework.core.io.buffer.*
+import org.springframework.http.server.reactive.*
+import reactor.core.publisher.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ResponseDecorator(
@@ -61,5 +57,5 @@ class ResponseDecorator(
 
     // Tiny helper to convert Publisher to Flux without importing Flux directly in signature
     // (use Reactor's Flux.from when available in your file)
-    private fun <T> fluxFromPublisher(p: Publisher<T>) = Flux.from(p)
+    private fun <T: Any> fluxFromPublisher(p: Publisher<T>) = Flux.from(p)
 }

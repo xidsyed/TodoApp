@@ -3,14 +3,14 @@ package com.example.todoapp.app.users.model
 import com.example.todoapp.app.auth.roles.data.mapper.entity
 import com.example.todoapp.app.auth.roles.data.model.NewzroomRole
 import com.example.todoapp.app.users.entity.UserEntity
-import com.example.todoapp.common.validation.AtLeastOneFieldNotNull
-import jakarta.validation.constraints.*
+import com.example.todoapp.common.validation.*
+import jakarta.validation.constraints.Future
 import org.hibernate.validator.constraints.URL
 import java.time.Instant
 
 @AtLeastOneFieldNotNull
 data class InternalPatchUserRequest(
-	@field:NotBlank
+	@field:NullOrNotBlank
 	val name: String? = null,
 	@field:URL
 	val picture: String? = null,

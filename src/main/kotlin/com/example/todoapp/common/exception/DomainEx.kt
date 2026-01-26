@@ -55,13 +55,24 @@ open class InvalidRequestEx(
 	cause = cause
 )
 
-open class AlreadyExistsEx(
+open class ConflictEx(
 	val entity: String,
 	override val props: Map<String, Any> = emptyMap(),
 	override val cause: Throwable?
 ) : DomainEx(
 	status = HttpStatus.CONFLICT,
-	message = "$entity already exists",
+	message = "conflict occurred with $entity ",
+	props = props,
+	cause = cause
+)
+
+open class InternalServerEx(
+	override val message: String,
+	override val props: Map<String, Any> = emptyMap(),
+	override val cause: Throwable? = null
+) : DomainEx(
+	status = HttpStatus.INTERNAL_SERVER_ERROR,
+	message = message,
 	props = props,
 	cause = cause
 )

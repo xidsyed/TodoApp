@@ -1,8 +1,9 @@
 plugins {
-	kotlin("jvm") version "2.2.10"
-	kotlin("plugin.spring") version "2.2.10"
-	id("org.springframework.boot") version "4.0.0-M3"
+	kotlin("jvm") version "2.2.21"
+	kotlin("plugin.spring") version "2.2.21"
+	id("org.springframework.boot") version "4.0.0"
 	id("io.spring.dependency-management") version "1.1.7"
+
 }
 
 group = "com.example"
@@ -31,7 +32,7 @@ dependencies {
 
 	// database
 	runtimeOnly("org.postgresql:postgresql")
-	runtimeOnly("org.postgresql:r2dbc-postgresql")
+	implementation("org.postgresql:r2dbc-postgresql")
 
 	// Security
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -43,12 +44,18 @@ dependencies {
 	// jackson
 	implementation("tools.jackson.core:jackson-databind:3.0.0")
 	implementation("tools.jackson.module:jackson-module-kotlin:3.0.0")
+	//  -- v2.20 for springdoc specifically
+	implementation(platform("com.fasterxml.jackson:jackson-bom:2.20.0"))
+	implementation("com.fasterxml.jackson.core:jackson-databind")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+
 
 	// caching
 	implementation("org.springframework.boot:spring-boot-starter-cache")
 	implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
 
-	// kotlin spring
+	// kotlin - spring
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
@@ -56,8 +63,11 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 	implementation("com.michael-bull.kotlin-result:kotlin-result:2.1.0")
 
+	// konform - schema validation
+	implementation("io.konform:konform-jvm:0.11.0")
+
 	// springdoc
-	implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.13")
+	implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.0.0")
 
 	// devtools
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -67,6 +77,8 @@ dependencies {
 
 	// testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.boot:spring-boot-webtestclient")
+
 	testImplementation("io.projectreactor:reactor-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")

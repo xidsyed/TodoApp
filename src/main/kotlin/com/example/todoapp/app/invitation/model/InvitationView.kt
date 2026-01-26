@@ -29,3 +29,4 @@ data class InvitationView(
 	@Column("assignee_role")
 	val assigneeRole: NewzroomRoleEntity?
 )
+

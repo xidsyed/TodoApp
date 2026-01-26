@@ -1,6 +1,7 @@
 package com.example.todoapp.app.users
 
 import com.example.todoapp.app.users.entity.UserEntity
+import kotlinx.coroutines.flow.Flow
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.stereotype.Repository
@@ -10,4 +11,10 @@ import java.util.*
 interface UserRepository : CoroutineCrudRepository<UserEntity, UUID> {
 	@Query("SELECT * from user_profiles WHERE email = :email LIMIT 1")
 	suspend fun findByEmail(email:String) : UserEntity?
+
+	suspend fun findByDisplayNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
+		displayName: String,
+		email: String
+	): Flow<UserEntity>
+
 }

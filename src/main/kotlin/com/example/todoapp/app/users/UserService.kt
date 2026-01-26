@@ -11,8 +11,12 @@ class UserService(
 
 	suspend fun getAllUsers() = userRepository.findAll()
 
-	suspend fun getUser(id : UUID) = userRepository.findById(id)
+	suspend fun getUser(id: UUID) = userRepository.findById(id)
 
-	suspend fun saveUser(user : UserEntity) = userRepository.save(user)
+	suspend fun saveUser(user: UserEntity) = userRepository.save(user)
+
+	suspend fun findUserByNameOrEmail(query: String) =
+		userRepository.findByDisplayNameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query)
+
 
 }

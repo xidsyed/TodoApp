@@ -1,0 +1,12 @@
+
+# Ignore Node modules
+node_modules/
+
+# Ignore Supabase cache
+supabase/.temp
+supabase/.branches
+
+# Ignore Supabase signing keys
+supabase/signing_key.json
+
+.env

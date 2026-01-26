@@ -1,5 +1,6 @@
 package com.example.todoapp.app.invitation.controller
 
+import com.example.todoapp.app.auth.roles.annotations.RequireAdmin
 import com.example.todoapp.app.auth.roles.data.mapper.entity
 import com.example.todoapp.app.invitation.*
 import com.example.todoapp.app.invitation.entity.InvitationEntity
@@ -16,10 +17,7 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.time.*
-import java.time.temporal.ChronoUnit
 import java.util.*
-
-
 
 @RestController
 @RequestMapping(InvitationController.INVITATION_PATH)
@@ -37,14 +35,27 @@ class InvitationController(
 	private val log = logger()
 
 	@PostMapping("")
+	@RequireAdmin
 	suspend fun createInvitation(
 		@Valid @RequestBody request: CreateInvitationRequest,
 		@AuthenticationPrincipal jwt: Jwt
 	): ResponseEntity<InvitationDto> {
 		val assignorUuid = UUID.fromString(jwt.subject)
+
+		// handle existing user
 		if (userRepo.findByEmail(request.email) != null) throw err(CONFLICT, "User already exists")
+
+		// handle existing invitation
+		val existingInvitation = invitationRepo.findByEmail(request.email)
+		if (existingInvitation != null) {
+			if (existingInvitation.eat < Instant.now()) {
+				invitationRepo.deleteById(existingInvitation.id!!)
+			} else {
+				throw err(CONFLICT, "Valid invitation for this user already exists")
+			}
+		}
 		if (!isValidExpiration(request.expiresAt)) throw err(
-			BAD_REQUEST, "Expiration time must be between 1 and 24 hours from now"
+			BAD_REQUEST, "Expiration time must be within 24 hours from now"
 		)
 
 		val createdInvitation = invitationRepo.save(
@@ -60,16 +71,19 @@ class InvitationController(
 	}
 
 	@GetMapping("/{id}")
+	@RequireAdmin
 	suspend fun getInvitation(@PathVariable id: UUID): InvitationDto {
 		return invitationViewRepo.findViewById(id)?.dto() ?: throw invitationNotFound(id.toString())
 	}
 
 	@GetMapping("/all")
+	@RequireAdmin
 	suspend fun getAllInvitations(): Flow<InvitationDto> {
 		return invitationViewRepo.findViewAll().map { it.dto() }
 	}
 
 	@PatchMapping("/{id}")
+	@RequireAdmin
 	suspend fun patchInvitation(
 		@PathVariable id: UUID,
 		@Valid @RequestBody patch: PatchInvitationRequest,
@@ -95,6 +109,7 @@ class InvitationController(
 	}
 
 	@DeleteMapping("/{id}")
+	@RequireAdmin
 	suspend fun deleteInvitation(
 		@PathVariable id: UUID
 	): ResponseEntity<Unit> {
@@ -107,9 +122,25 @@ class InvitationController(
 		return res(NO_CONTENT)
 	}
 
+	@GetMapping("is_valid_pending/{id}")
+	suspend fun isValidPendingInvitation(
+		@PathVariable id: UUID
+	): ResponseEntity<Unit> {
+		val invitation = invitationViewRepo.findViewById(id)?.dto()
+
+		val invitationNotNull = invitation != null
+		val invitationNotExpired = invitation?.let { it.eat > Instant.now() } ?: false
+		val invitationNotAssigned = invitation?.let { it.assignee == null } ?: false
+
+		if (invitationNotNull && invitationNotExpired && invitationNotAssigned) {
+			return res(OK)
+		} else {
+			throw err(NOT_FOUND)
+		}
+	}
+
 	private suspend fun isValidExpiration(eat: Instant): Boolean {
-		return eat.isBefore(Instant.now().plus(Duration.ofHours(24))) &&
-				eat.isAfter(Instant.now().plus(1, ChronoUnit.HOURS))
+		return eat.isBefore(Instant.now().plus(Duration.ofHours(25)))
 	}
 
 }

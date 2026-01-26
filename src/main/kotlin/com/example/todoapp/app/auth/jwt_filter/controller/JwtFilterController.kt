@@ -5,6 +5,8 @@ import com.example.todoapp.app.auth.jwt_filter.model.BlacklistedTokenDto
 import com.example.todoapp.app.auth.roles.annotations.RequireAdmin
 import com.example.todoapp.app.users.UserRepository
 import com.example.todoapp.app.users.exception.UserNotFoundEx
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import kotlinx.coroutines.flow.*
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.ok
@@ -17,6 +19,7 @@ import java.util.*
 @RestController
 @EnableReactiveMethodSecurity
 @RequestMapping("/jwt_filter")
+@Tag(name = "jwt filter", description = "Allows authorized clients to blacklist user jwt based on `iat`")
 class JwtFilterController(
 	private val jwtFilterService: JwtFilterService,
 	private val userRepository: UserRepository
@@ -24,6 +27,7 @@ class JwtFilterController(
 
 	@PostMapping("blacklist")
 	suspend fun blacklistUser(
+		@Parameter(name = "sub", description = "the subject's uuid to be blacklisted")
 		@RequestParam("sub") sub: String
 	): ResponseEntity<BlacklistedTokenDto> {
 		val userId = UUID.fromString(sub)

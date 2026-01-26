@@ -32,7 +32,6 @@ class InvitationViewRepositoryTest @Autowired constructor(
 
 	private val logger = LoggerFactory.getLogger(InvitationViewRepositoryTest::class.java)
 
-
 	@BeforeTest
 	fun setupTests() {
 		runBlocking {

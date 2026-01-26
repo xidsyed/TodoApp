@@ -1,7 +1,7 @@
 package com.example.todoapp.app.users.entity
 
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
-import org.springframework.data.annotation.Id
+import org.springframework.data.annotation.*
 import org.springframework.data.domain.Persistable
 import org.springframework.data.relational.core.mapping.*
 import java.time.Instant
@@ -29,6 +29,9 @@ data class UserEntity(
 	@Column("role")
 	val role: NewzroomRoleEntity,
 ) : Persistable<UUID> {
+	@Transient
+	var isNewRecord: Boolean = (createdAt == null)
+
 	override fun getId(): UUID = userId
-	override fun isNew(): Boolean = createdAt == null
+	override fun isNew(): Boolean = isNewRecord
 }

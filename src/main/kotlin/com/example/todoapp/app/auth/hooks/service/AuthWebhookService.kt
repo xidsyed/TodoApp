@@ -7,7 +7,6 @@ import com.example.todoapp.app.invitation.entity.InvitationEntity
 import com.example.todoapp.app.invitation.exception.*
 import com.example.todoapp.app.users.UserRepository
 import com.example.todoapp.app.users.entity.UserEntity
-import com.example.todoapp.common.util.logger
 import com.example.todoapp.core.extensions.executeAndAwaitResult
 import com.example.todoapp.core.webhook.WebhookRegistry
 import com.example.todoapp.core.webhook.exception.*
@@ -29,16 +28,15 @@ class AuthWebhookService(
 	webhookRegistry: WebhookRegistry,
 ) {
 
-	private val log = logger()
 	val supabaseAuthWebhook = webhookRegistry[WebhookSource.SUPABASE]
 
 	suspend fun processBeforeUserCreatedHook(
 		payload: String,
 		headers: HttpHeaders
 	): Result<Unit, BeforeUserCreatedTokenProcessingError> {
-		val jwt = jsonMapper.readValue<JwtPayload>(payload)
+		val body = jsonMapper.readValue<BeforeUserCreatedPayload>(payload)
 		return verifyWebhook(payload, headers).andThen {
-			fetchValidUserInvitation(jwt).map { }.mapError { ex -> UserInvitationError(ex) }
+			fetchValidUserInvitation(body.user.email).map { }.mapError { ex -> UserInvitationError(ex) }
 		}
 	}
 
@@ -84,7 +82,7 @@ class AuthWebhookService(
 			if (fetchedUser != null) return@executeAndAwaitResult Ok(fetchedUser)
 
 			// try to create profile from invitation and jwt
-			fetchValidUserInvitation(jwt)
+			fetchValidUserInvitation(jwt.claims.email)
 				.mapError { invitationEx -> UserInvitationError(invitationEx) }
 				.andThen { invitation ->
 					val createdUser = userRepository.save(
@@ -101,9 +99,9 @@ class AuthWebhookService(
 				}
 		}
 
-	private suspend fun fetchValidUserInvitation(jwt: JwtPayload): Result<InvitationEntity, InvitationException> {
-		val userInvitation = invitationRepo.findByEmail(jwt.claims.email)
-			?: return Err(NoInvitationFoundForEmail(jwt.claims.email))
+	private suspend fun fetchValidUserInvitation(email: String): Result<InvitationEntity, InvitationException> {
+		val userInvitation = invitationRepo.findByEmail(email)
+			?: return Err(NoInvitationFoundForEmail(email))
 
 		return userInvitation.let {
 			when {

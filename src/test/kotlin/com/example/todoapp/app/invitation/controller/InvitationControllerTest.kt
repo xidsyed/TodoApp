@@ -14,9 +14,10 @@ import com.example.todoapp.test.WithMockJwt
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.http.*
+import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -303,5 +304,81 @@ class InvitationControllerTest(
 			)
 			.exchange()
 			.expectStatus().isBadRequest
+	}
+
+	@Nested
+	@DisplayName("GET $INVITATION_PATH/is_valid_pending/{id}")
+	inner class IsValidPendingInvitationTest {
+
+		@Test
+		fun `should return 200 OK for a valid pending invitation`(): Unit = runBlocking {
+			val invitation = invitationRepo.save(
+				InvitationEntity(
+					email = "pending-invitation@example.com",
+					eat = Instant.now().plus(2, ChronoUnit.HOURS),
+					role = NewzroomRoleEntity.WRITER,
+					assignor = TEST_USER_ID
+				)
+			)
+
+			client.get().uri("$INVITATION_PATH/is_valid_pending/${invitation.id}")
+				.exchange()
+				.expectStatus().isOk
+		}
+
+		@Test
+		fun `should return 404 Not Found for a non-existent invitation`() {
+			client.get().uri("$INVITATION_PATH/is_valid_pending/${UUID.randomUUID()}")
+				.exchange()
+				.expectStatus().isNotFound
+		}
+
+		@Test
+		fun `should return 404 Not Found for an expired invitation`(): Unit = runBlocking {
+			val invitation = invitationRepo.save(
+				InvitationEntity(
+					email = "expired-invitation@example.com",
+					eat = Instant.now().minus(1, ChronoUnit.HOURS), // Expired
+					role = NewzroomRoleEntity.WRITER,
+					assignor = TEST_USER_ID
+				)
+			)
+
+			client.get().uri("$INVITATION_PATH/is_valid_pending/${invitation.id}")
+				.exchange()
+				.expectStatus().isNotFound
+		}
+
+		@Test
+		fun `should return 404 Not Found for an assigned invitation`(): Unit = runBlocking {
+			val assignee = userRepo.save(
+				UserEntity(
+					userId = UUID.randomUUID(),
+					email = "assignee-for-invitation@example.com",
+					displayName = "Assignee",
+					role = NewzroomRoleEntity.WRITER
+				)
+			)
+			val invitation = invitationRepo.save(
+				InvitationEntity(
+					email = "assigned-invitation@example.com",
+					eat = Instant.now().plus(2, ChronoUnit.HOURS),
+					role = NewzroomRoleEntity.WRITER,
+					assignor = TEST_USER_ID,
+					assignee = assignee.id
+				)
+			)
+
+			client.get().uri("$INVITATION_PATH/is_valid_pending/${invitation.id}")
+				.exchange()
+				.expectStatus().isNotFound
+		}
+
+		@Test
+		fun `should return 400 Bad Request for an invalid invitation ID`() {
+			client.get().uri("$INVITATION_PATH/is_valid_pending/invalid-uuid")
+				.exchange()
+				.expectStatus().isBadRequest
+		}
 	}
 }

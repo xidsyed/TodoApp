@@ -1,7 +1,7 @@
 package com.example.todoapp
 
 import org.flywaydb.core.Flyway
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.FileSystemResource
@@ -9,12 +9,47 @@ import org.springframework.jdbc.datasource.init.ScriptUtils
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.test.context.*
 import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.*
 import java.io.File
 import java.sql.Connection
 
-@SpringBootTest
-@Testcontainers
+/**
+ * Base class for integration tests that require a database.
+ *
+ * This class sets up a PostgreSQL container using Testcontainers and configures the application
+ * to use it. It also ensures the database is reset to baseline before each test, ensuring
+ * that tests are isolated and run against a known state.
+ *
+ * ## Test Lifecycle
+ *
+ * 1.  **Container Startup:** A reusable PostgreSQL container is started once per test suite run.
+ * 2.  **Schema Migration:** Flyway migrations are applied once when the container starts to set up the schema.
+ * 3.  **Database Reset (Before Each Test):**
+ *     - All tables are truncated.
+ *     - Baseline seed data is re-applied.
+ *
+ * ## Usage
+ *
+ * To use this class, simply extend it in your test class:
+ *
+ * ```kotlin
+ * class MyServiceIntegrationTest : NewzDBIntegrationTest() {
+ *
+ *     @Autowired
+ *     lateinit var myService: MyService
+ *
+ *     @Test
+ *     fun `my service should do something`() {
+ *         // ...
+ *     }
+ * }
+ * ```
+ */
+@SpringBootTest(
+	properties = [
+		"springdoc.api-docs.enabled=false",
+		"springdoc.swagger-ui.enabled=false"
+	]
+)
 abstract class NewzDBIntegrationTest {
 
 	@Autowired
@@ -22,19 +57,23 @@ abstract class NewzDBIntegrationTest {
 
 	companion object {
 
-		@Container
 		val postgres = PostgreSQLContainer("postgres:15-alpine")
 			.withDatabaseName("newzdb")
 			.withUsername("postgres")
 			.withPassword("postgres")
-			.withInitScript("test-init.sql")
 			.withReuse(true)
+
+
+		@BeforeAll
+		@JvmStatic
+		fun startContainer() {
+			postgres.start()
+		}
 
 		@JvmStatic
 		@DynamicPropertySource
 		fun setProperties(registry: DynamicPropertyRegistry) {
 			applySchemaAndBaselineMigrations()
-
 			registry.add("spring.r2dbc.username") { "postgres" }
 			registry.add("spring.r2dbc.password") { "postgres" }
 			registry.add("spring.r2dbc.url") {
@@ -50,6 +89,8 @@ abstract class NewzDBIntegrationTest {
 		private fun applySchemaAndBaselineMigrations() {
 			Flyway.configure()
 				.dataSource(postgres.jdbcUrl, "postgres", "postgres")
+				.schemas("public", "extensions")
+				.defaultSchema("public")
 				.locations(
 					"filesystem:newzdb/supabase/migrations",
 					"filesystem:newzdb/supabase/seeds"
@@ -63,6 +104,10 @@ abstract class NewzDBIntegrationTest {
 		}
 	}
 
+	/**
+	 * Resets the database to a clean state before each test.
+	 * This is done by truncating all tables and then re-applying baseline seed data.
+	 */
 	@BeforeEach
 	fun resetDatabase() {
 		postgres.createConnection("").use { connection ->

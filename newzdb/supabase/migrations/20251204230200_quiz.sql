@@ -1,7 +1,7 @@
 -- Channels
 CREATE TABLE IF NOT EXISTS public.channels
 (
-    id          uuid PRIMARY KEY     DEFAULT uuid_generate_v4(),
+    id          uuid PRIMARY KEY     DEFAULT extensions.uuid_generate_v4(),
     name        text        NOT NULL UNIQUE,
     description text,
     created_at  timestamptz NOT NULL DEFAULT now(),
@@ -12,7 +12,7 @@ CREATE TRIGGER channels_moddatetime
     BEFORE UPDATE
     ON public.channels
     FOR EACH ROW
-EXECUTE FUNCTION moddatetime('updated_at');
+EXECUTE FUNCTION extensions.moddatetime('updated_at');
 
 
 -- Tags
@@ -27,7 +27,7 @@ CREATE INDEX idx_tags_created_at ON public.tags (created_at);
 -- Quiz Items
 CREATE TABLE IF NOT EXISTS public.quiz_items
 (
-    id          uuid PRIMARY KEY     DEFAULT uuid_generate_v4(),
+    id          uuid PRIMARY KEY     DEFAULT extensions.uuid_generate_v4(),
     title       text,
     description text,
     image_id    text,
@@ -47,13 +47,13 @@ CREATE TRIGGER quiz_items_moddatetime
     BEFORE UPDATE
     ON public.quiz_items
     FOR EACH ROW
-EXECUTE FUNCTION moddatetime('updated_at');
+EXECUTE FUNCTION extensions.moddatetime('updated_at');
 
 
 -- quizzes table
 CREATE TABLE IF NOT EXISTS public.quizzes
 (
-    id           uuid PRIMARY KEY     DEFAULT uuid_generate_v4(),
+    id           uuid PRIMARY KEY     DEFAULT extensions.uuid_generate_v4(),
     title        text        NOT NULL,
     description  text,
     channel_id   uuid        NOT NULL REFERENCES public.channels (id) ON DELETE RESTRICT,
@@ -72,7 +72,7 @@ CREATE TRIGGER quizzes_moddatetime
     BEFORE UPDATE
     ON public.quizzes
     FOR EACH ROW
-EXECUTE FUNCTION moddatetime('updated_at');
+EXECUTE FUNCTION extensions.moddatetime('updated_at');
 
 
 -- quizzes_quiz_items (join table with ordering)

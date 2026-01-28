@@ -29,4 +29,4 @@ CREATE INDEX idx_cache_kv_expire_at
 CREATE TRIGGER public_cache_kv_moddatetime
 BEFORE UPDATE ON public.cache_kv
 FOR EACH ROW
-EXECUTE FUNCTION moddatetime('updated_at');
+EXECUTE FUNCTION extensions.moddatetime('updated_at');

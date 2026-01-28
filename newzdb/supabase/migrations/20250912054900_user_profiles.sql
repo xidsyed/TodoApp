@@ -21,4 +21,4 @@ CREATE INDEX idx_user_profiles_email ON public.user_profiles(email);
 -- Auto-update updated_at on modification
 CREATE TRIGGER user_profiles_moddatetime
 BEFORE UPDATE ON public.user_profiles
-FOR EACH ROW EXECUTE FUNCTION moddatetime('updated_at');
+FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime('updated_at');

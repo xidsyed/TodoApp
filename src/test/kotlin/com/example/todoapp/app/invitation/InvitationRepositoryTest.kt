@@ -1,36 +1,33 @@
 package com.example.todoapp.app.invitation
 
+import com.example.todoapp.AbstractIntegrationTest
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import com.example.todoapp.app.invitation.entity.InvitationEntity
 import com.example.todoapp.app.users.UserRepository
 import com.example.todoapp.app.users.entity.UserEntity
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.r2dbc.core.DatabaseClient
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlin.test.*
 
-@SpringBootTest
 class InvitationRepositoryTest @Autowired constructor(
 	private val repo: InvitationRepository,
 	private val userRepository: UserRepository,
-	private val dbClient: DatabaseClient
-
-) {
+) : AbstractIntegrationTest() {
 	private val userId1 = UUID.randomUUID()
 	private val userId2 = UUID.randomUUID()
 
 	private val logger = LoggerFactory.getLogger(InvitationRepositoryTest::class.java)
 
 
-	@BeforeTest
+	@BeforeEach
 	fun setupTests() {
 		runBlocking {
 			userRepository.saveAll(
@@ -55,9 +52,12 @@ class InvitationRepositoryTest @Autowired constructor(
 	}
 
 
-	@AfterTest
+	@AfterEach
 	fun cleanup(): Unit = runBlocking {
-		dbClient.sql("TRUNCATE TABLE invitations CASCADE").then().block()
+		// The database is managed by Testcontainers and Flyway.
+		// For test isolation, we should clean up data inserted by this test.
+		// Truncating is a simple way to do this.
+		databaseClient.sql("TRUNCATE TABLE invitations CASCADE").then().block()
 		userRepository.deleteAllById(listOf(userId1, userId2))
 	}
 

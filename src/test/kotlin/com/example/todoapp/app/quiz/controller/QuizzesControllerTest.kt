@@ -1,5 +1,6 @@
 package com.example.todoapp.app.quiz.controller
 
+import com.example.todoapp.AbstractIntegrationTest
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import com.example.todoapp.app.quiz.domain.service.ChannelValidationService
 import com.example.todoapp.app.quiz.mapper.*
@@ -14,7 +15,6 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.context.ApplicationContext
 import org.springframework.http.MediaType
@@ -23,7 +23,6 @@ import java.time.Instant
 import java.util.*
 import kotlin.random.Random
 
-@SpringBootTest
 @AutoConfigureWebTestClient
 class QuizzesControllerTest @Autowired constructor(
 	private val context: ApplicationContext,
@@ -37,7 +36,7 @@ class QuizzesControllerTest @Autowired constructor(
 	private val viewRepo: QuizViewsRepository,
 	private val channelValidationService: ChannelValidationService,
 	private val webTestClient: WebTestClient
-) {
+) : AbstractIntegrationTest() {
 
 
 	private val savedUser = UserEntity(
@@ -54,6 +53,11 @@ class QuizzesControllerTest @Autowired constructor(
 
 	@BeforeEach
 	fun setup(): Unit = runBlocking {
+		// Fetch seeded channels
+		val channels = channelRepo.findAll().toList()
+		draftChannel = channels.first { it.name == "draft" }
+		newzleChannel = channels.first { it.name == "newzle" }
+
 		// Setup entities
 		userRepo.save(savedUser)
 
@@ -65,16 +69,6 @@ class QuizzesControllerTest @Autowired constructor(
 		savedQuiz = createAndSaveQuiz("Initial Title 1", draftChannel.id!!, savedUser.userId)
 
 		quizzesQuizItemsRepo.save(QuizzesQuizItemsEntity.new(savedQuiz.id!!, savedItem1.id!!, 1))
-	}
-
-	@AfterEach
-	fun cleanup(): Unit = runBlocking {
-		quizzesQuizItemsRepo.deleteAll()
-		itemsTagsRepo.deleteAll()
-		quizRepo.deleteAll()
-		quizItemRepo.deleteAll()
-		userRepo.deleteAll()
-		tagRepo.deleteAll()
 	}
 
 	@Test

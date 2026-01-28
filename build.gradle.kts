@@ -3,7 +3,6 @@ plugins {
 	kotlin("plugin.spring") version "2.2.21"
 	id("org.springframework.boot") version "4.0.0"
 	id("io.spring.dependency-management") version "1.1.7"
-
 }
 
 group = "com.example"
@@ -25,6 +24,12 @@ repositories {
 	mavenCentral()
 }
 
+dependencyManagement {
+	imports {
+		mavenBom("org.testcontainers:testcontainers-bom:1.20.0")
+	}
+}
+
 dependencies {
 	// springboot webflux
 	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
@@ -33,6 +38,7 @@ dependencies {
 	// database
 	runtimeOnly("org.postgresql:postgresql")
 	implementation("org.postgresql:r2dbc-postgresql")
+
 
 	// Security
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -78,6 +84,15 @@ dependencies {
 	// testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-webtestclient")
+
+	// testcontainers
+	testImplementation("org.testcontainers:junit-jupiter")
+	testImplementation("org.testcontainers:postgresql")
+	// flywaydb : only for applying migrations to testcontainers
+	testImplementation("org.flywaydb:flyway-core")
+	testImplementation("org.flywaydb:flyway-database-postgresql")
+	testImplementation("org.springframework.boot:spring-boot-starter-jdbc")	// needed for flywaydb
+
 
 	testImplementation("io.projectreactor:reactor-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")

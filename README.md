@@ -9,7 +9,7 @@ The `NewzDBIntegrationTest` class (`src/test/kotlin/com/example/todoapp/NewzDBIn
 *   **Testcontainers for PostgreSQL:** It spins up a PostgreSQL database in a Docker container using [Testcontainers](https://www.testcontainers.org/). This ensures that tests run in a clean, isolated, and reproducible database environment.
 *   **Container Lifecycle:** The PostgreSQL container is configured with `.withReuse(true)`, meaning it is started only once and reused across all local test **indefinetely**, significantly speeding up test execution.
 *   **Dynamic Configuration:** It dynamically configures the Spring `R2DBC` to connect to the test container.
-*   **Schema Management with Flyway:** On initial startup, it automatically applies all Flyway schema migrations located in `newzdb/supabase/migrations` as well as applies baseline seed scripts in `newzdb/supabase/seeds`.
+*   **Schema Management with Flyway:** On initial startup, it automatically applies all Flyway schema migrations located in `newzdb/supabase/migrations`.
 *   **Deterministic Database State:** Before each test method, it completely resets the database to a known baseline.
 
 ### Note

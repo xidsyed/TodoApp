@@ -1,5 +1,6 @@
 package com.example.todoapp
 
+import com.example.todoapp.common.util.logger
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,36 +14,14 @@ import java.io.File
 import java.sql.Connection
 
 /**
- * Base class for integration tests that require a database.
+ * Base class for database-backed integration tests.
  *
- * This class sets up a PostgreSQL container using Testcontainers and configures the application
- * to use it. It also ensures the database is reset to baseline before each test, ensuring
- * that tests are isolated and run against a known state.
- *
- * ## Test Lifecycle
- *
- * 1.  **Container Startup:** A reusable PostgreSQL container is started once per test suite run.
- * 2.  **Schema Migration:** Flyway migrations are applied once when the container starts to set up the schema.
- * 3.  **Database Reset (Before Each Test):**
- *     - All tables are truncated.
- *     - Baseline seed data is re-applied.
- *
- * ## Usage
- *
- * To use this class, simply extend it in your test class:
- *
- * ```kotlin
- * class MyServiceIntegrationTest : NewzDBIntegrationTest() {
- *
- *     @Autowired
- *     lateinit var myService: MyService
- *
- *     @Test
- *     fun `my service should do something`() {
- *         // ...
- *     }
- * }
- * ```
+ * Lifecycle:
+ * 1. Start (reused) Postgres container once per JVM
+ * 2. Apply schema migrations once
+ * 3. Before each test:
+ *    - truncate all tables
+ *    - re-apply baseline seed data
  */
 @SpringBootTest(
 	properties = [
@@ -57,23 +36,37 @@ abstract class NewzDBIntegrationTest {
 
 	companion object {
 
-		val postgres = PostgreSQLContainer("postgres:15-alpine")
+		private val logger = logger()
+
+		// ----------------------------
+		// Container
+		// ----------------------------
+
+		private val postgres = PostgreSQLContainer("postgres:15-alpine")
 			.withDatabaseName("newzdb")
 			.withUsername("postgres")
 			.withPassword("postgres")
 			.withReuse(true)
 
-
 		@BeforeAll
 		@JvmStatic
-		fun startContainer() {
+		fun beforeAll() {
+			logger.info("Starting Postgres container")
 			postgres.start()
+
+			applySchemaMigrations()
+			resetDatabase()
 		}
 
+		@AfterAll
 		@JvmStatic
+		fun afterAll() {
+			withConnection { truncateAllTables(it) }
+		}
+
 		@DynamicPropertySource
-		fun setProperties(registry: DynamicPropertyRegistry) {
-			applySchemaAndBaselineMigrations()
+		@JvmStatic
+		fun registerProperties(registry: DynamicPropertyRegistry) {
 			registry.add("spring.r2dbc.username") { "postgres" }
 			registry.add("spring.r2dbc.password") { "postgres" }
 			registry.add("spring.r2dbc.url") {
@@ -81,88 +74,84 @@ abstract class NewzDBIntegrationTest {
 			}
 		}
 
-		/**
-		 * Runs ONCE per JVM:
-		 * - schema migrations
-		 * - baseline (R__) migrations
-		 */
-		private fun applySchemaAndBaselineMigrations() {
+		// ----------------------------
+		// Flyway (schema only)
+		// ----------------------------
+
+		private fun applySchemaMigrations() {
+			logger.info("Applying Flyway schema migrations")
+
 			Flyway.configure()
 				.dataSource(postgres.jdbcUrl, "postgres", "postgres")
-				.schemas("public", "extensions")
 				.defaultSchema("public")
-				.locations(
-					"filesystem:newzdb/supabase/migrations",
-					"filesystem:newzdb/supabase/seeds"
-				)
-				.sqlMigrationPrefix("")
-				.repeatableSqlMigrationPrefix("R")
-				.sqlMigrationSeparator("_")
+				.locations("filesystem:newzdb/supabase/migrations")
 				.baselineOnMigrate(true)
 				.load()
 				.migrate()
 		}
-	}
 
-	/**
-	 * Resets the database to a clean state before each test.
-	 * This is done by truncating all tables and then re-applying baseline seed data.
-	 */
-	@BeforeEach
-	fun resetDatabase() {
-		postgres.createConnection("").use { connection ->
-			truncateAllTables(connection)
-			applyBaselineSeeds(connection)
+		// ----------------------------
+		// Database utilities
+		// ----------------------------
+
+		private fun withConnection(block: (Connection) -> Unit) {
+			postgres.createConnection("").use(block)
 		}
-	}
 
-	/**
-	 * Fast, deterministic truncation:
-	 * - excludes flyway_schema_history
-	 * - uses catalog-driven SQL (no PL/pgSQL DO blocks)
-	 */
-	private fun truncateAllTables(connection: Connection) {
-		val truncateSql = buildString {
-			append("TRUNCATE TABLE ")
-
-			connection.metaData.getTables(null, "public", "%", arrayOf("TABLE"))
+		private fun truncateAllTables(connection: Connection) {
+			val tables = connection.metaData
+				.getTables(null, "public", "%", arrayOf("TABLE"))
 				.use { rs ->
-					val tables = mutableListOf<String>()
-					while (rs.next()) {
-						val table = rs.getString("TABLE_NAME")
-						if (table != "flyway_schema_history") {
-							tables += "\"public\".\"$table\""
+					buildList {
+						while (rs.next()) {
+							val table = rs.getString("TABLE_NAME")
+							if (table != "flyway_schema_history") {
+								add("\"public\".\"$table\"")
+							}
 						}
 					}
-					append(tables.joinToString(", "))
 				}
 
-			append(" CASCADE;")
+			if (tables.isEmpty()) return
+
+			val sql = "TRUNCATE TABLE ${tables.joinToString(", ")} CASCADE;"
+			connection.createStatement().use { it.execute(sql) }
 		}
 
-		connection.createStatement().use { it.execute(truncateSql) }
-	}
+		private fun applyBaselineSeeds(connection: Connection) {
+			val seedDir = File("newzdb/supabase/seeds")
+			if (!seedDir.exists()) return
 
-	/**
-	 * Re-applies ALL baseline seed files before each test.
-	 * Convention:
-	 *   R_###_baseline_*.sql
-	 */
-	private fun applyBaselineSeeds(connection: Connection) {
-		val seedDir = File("newzdb/supabase/seeds")
+			logger.info("Applying baseline seeds")
 
-		if (!seedDir.exists()) return
-
-		seedDir
-			.listFiles { _, name ->
+			seedDir.listFiles { _, name ->
 				name.matches(Regex("""R_\d+_baseline_.*\.sql"""))
 			}
-			?.sortedBy { it.name }
-			?.forEach { seed ->
-				ScriptUtils.executeSqlScript(
-					connection,
-					FileSystemResource(seed)
-				)
+				?.sortedBy { it.name }
+				?.forEach { seed ->
+					logger.info("→ ${seed.name}")
+					ScriptUtils.executeSqlScript(
+						connection,
+						FileSystemResource(seed)
+					)
+				}
+		}
+
+		private fun resetDatabase() {
+			withConnection {
+				truncateAllTables(it)
+				applyBaselineSeeds(it)
 			}
+		}
 	}
+
+	// ----------------------------
+	// Per-test reset
+	// ----------------------------
+
+	@BeforeEach
+	fun beforeEach() {
+		resetDatabase()
+	}
+
 }

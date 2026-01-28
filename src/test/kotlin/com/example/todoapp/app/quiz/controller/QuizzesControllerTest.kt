@@ -1,6 +1,6 @@
 package com.example.todoapp.app.quiz.controller
 
-import com.example.todoapp.AbstractIntegrationTest
+import com.example.todoapp.NewzDBIntegrationTest
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import com.example.todoapp.app.quiz.domain.service.ChannelValidationService
 import com.example.todoapp.app.quiz.mapper.*
@@ -36,7 +36,7 @@ class QuizzesControllerTest @Autowired constructor(
 	private val viewRepo: QuizViewsRepository,
 	private val channelValidationService: ChannelValidationService,
 	private val webTestClient: WebTestClient
-) : AbstractIntegrationTest() {
+) : NewzDBIntegrationTest() {
 
 
 	private val savedUser = UserEntity(

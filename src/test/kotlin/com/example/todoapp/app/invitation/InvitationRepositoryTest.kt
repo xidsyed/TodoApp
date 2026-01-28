@@ -1,6 +1,6 @@
 package com.example.todoapp.app.invitation
 
-import com.example.todoapp.AbstractIntegrationTest
+import com.example.todoapp.NewzDBIntegrationTest
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import com.example.todoapp.app.invitation.entity.InvitationEntity
 import com.example.todoapp.app.users.UserRepository
@@ -20,7 +20,7 @@ import kotlin.test.*
 class InvitationRepositoryTest @Autowired constructor(
 	private val repo: InvitationRepository,
 	private val userRepository: UserRepository,
-) : AbstractIntegrationTest() {
+) : NewzDBIntegrationTest() {
 	private val userId1 = UUID.randomUUID()
 	private val userId2 = UUID.randomUUID()
 

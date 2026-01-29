@@ -140,7 +140,7 @@ class InvitationController(
 	}
 
 	private suspend fun isValidExpiration(eat: Instant): Boolean {
-		return eat.isBefore(Instant.now().plus(Duration.ofHours(25)))
+		return eat.isBefore(Instant.now().plus(Duration.ofHours(24)))
 	}
 
 }

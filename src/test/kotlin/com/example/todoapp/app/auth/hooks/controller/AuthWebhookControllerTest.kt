@@ -1,30 +1,28 @@
 package com.example.todoapp.app.auth.hooks.controller
 
-import com.example.todoapp.app.auth.hooks.model.JwtPayload
+import com.example.todoapp.NewzDBIntegrationTest
+import com.example.todoapp.app.auth.hooks.model.*
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import com.example.todoapp.app.invitation.InvitationRepository
 import com.example.todoapp.app.invitation.entity.InvitationEntity
 import com.example.todoapp.app.users.UserRepository
 import com.example.todoapp.app.users.entity.UserEntity
-import com.example.todoapp.common.util.logger
 import com.example.todoapp.core.webhook.*
 import com.example.todoapp.core.webhook.Webhook.Companion.UNBRANDED_MSG_ID_KEY
 import com.example.todoapp.core.webhook.Webhook.Companion.UNBRANDED_MSG_SIGNATURE_KEY
 import com.example.todoapp.core.webhook.Webhook.Companion.UNBRANDED_MSG_TIMESTAMP_KEY
 import com.example.todoapp.core.webhook.properties.WebhookSource
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.http.*
+import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import tools.jackson.databind.ObjectMapper
 import java.time.Instant
 import java.util.*
-import kotlin.test.AfterTest
 
-@SpringBootTest
 @AutoConfigureWebTestClient
 class AuthWebhookControllerTest @Autowired constructor(
 	private val client: WebTestClient,
@@ -32,10 +30,9 @@ class AuthWebhookControllerTest @Autowired constructor(
 	private val invitationRepository: InvitationRepository,
 	private val objectMapper: ObjectMapper,
 	webhookRegistry: WebhookRegistry,
-) {
+): NewzDBIntegrationTest()  {
 
 	private val webhook: Webhook = webhookRegistry[WebhookSource.SUPABASE]
-	private val log = logger()
 
 	companion object {
 		private val ASSIGNOR_ID = UUID.randomUUID()
@@ -45,7 +42,7 @@ class AuthWebhookControllerTest @Autowired constructor(
 
 	}
 
-	@AfterTest
+	@AfterEach
 	fun tearDown() = runBlocking {
 		invitationRepository.deleteAll()
 		userRepository.deleteAllById(listOf(ASSIGNOR_ID, ASSIGNOR_ID))
@@ -53,8 +50,8 @@ class AuthWebhookControllerTest @Autowired constructor(
 
 	@Test
 	fun `beforeUserCreated should return 200 for valid invitation`() {
-		seedUsersAndInvitation()
-		val (payload, headers) = generateSignedPayload(defaultJwt)
+		quickUserAndInvitationSeed()
+		val (payload, headers) = generateSignedPayload(defaultBeforeUserCreatedPayload)
 
 		client.post().uri("/auth/hooks/before_user_created")
 			.contentType(MediaType.APPLICATION_JSON)
@@ -66,7 +63,7 @@ class AuthWebhookControllerTest @Autowired constructor(
 
 	@Test
 	fun `beforeUserCreated should return 403 for no invitation`() {
-		val (payload, headers) = generateSignedPayload(defaultJwt)
+		val (payload, headers) = generateSignedPayload(defaultBeforeUserCreatedPayload)
 
 		client.post().uri("/auth/hooks/before_user_created")
 			.contentType(MediaType.APPLICATION_JSON)
@@ -78,8 +75,8 @@ class AuthWebhookControllerTest @Autowired constructor(
 
 	@Test
 	fun `beforeUserCreated should return 403 for expired invitation`() {
-		seedUsersAndInvitation { eat = Instant.now().minusSeconds(3600) }
-		val (payload, headers) = generateSignedPayload(defaultJwt)
+		quickUserAndInvitationSeed { invitationExpiresAt = Instant.now().minusSeconds(3600) }
+		val (payload, headers) = generateSignedPayload(defaultBeforeUserCreatedPayload)
 
 		client.post().uri("/auth/hooks/before_user_created")
 			.contentType(MediaType.APPLICATION_JSON)
@@ -91,8 +88,8 @@ class AuthWebhookControllerTest @Autowired constructor(
 
 	@Test
 	fun `beforeUserCreated should return 403 for assigned invitation`() {
-		seedUsersAndInvitation { assignInvitation = true }
-		val (payload, headers) = generateSignedPayload(defaultJwt)
+		quickUserAndInvitationSeed { shouldInvitationBeAssignedToDefaultAssignee = true }
+		val (payload, headers) = generateSignedPayload(defaultBeforeUserCreatedPayload)
 
 		client.post().uri("/auth/hooks/before_user_created")
 			.contentType(MediaType.APPLICATION_JSON)
@@ -104,8 +101,8 @@ class AuthWebhookControllerTest @Autowired constructor(
 
 	@Test
 	fun `beforeUserCreated should return 403 for mismatched email`() {
-		seedUsersAndInvitation { invitationEmail = "wrong@example.com" }
-		val (payload, headers) = generateSignedPayload(defaultJwt)
+		quickUserAndInvitationSeed { defaultAssigneeEmailOverride = "wrong@example.com" }
+		val (payload, headers) = generateSignedPayload(defaultBeforeUserCreatedPayload)
 
 		client.post().uri("/auth/hooks/before_user_created")
 			.contentType(MediaType.APPLICATION_JSON)
@@ -117,7 +114,7 @@ class AuthWebhookControllerTest @Autowired constructor(
 
 	@Test
 	fun `beforeUserCreated should return 401 for invalid signature`() {
-		val (payload, headers) = generateSignedPayload(defaultJwt)
+		val (payload, headers) = generateSignedPayload(defaultBeforeUserCreatedPayload)
 		val invalidHeaders = headers.toSingleValueMap().mapValues { (key, value) ->
 			if (key == UNBRANDED_MSG_SIGNATURE_KEY) "v1,invalid_signature_string" else value
 		}
@@ -132,7 +129,7 @@ class AuthWebhookControllerTest @Autowired constructor(
 
 	@Test
 	fun `customAccessToken should create user and return 200 for valid invitation`() {
-		seedUsersAndInvitation()
+		quickUserAndInvitationSeed()
 		val (payload, headers) = generateSignedPayload(defaultJwt)
 
 		client.post().uri("/auth/hooks/custom_access_token")
@@ -153,7 +150,7 @@ class AuthWebhookControllerTest @Autowired constructor(
 
 	@Test
 	fun `customAccessToken should return 200 with user roles for existing user`() {
-		seedUsersAndInvitation { assignInvitation = true }
+		quickUserAndInvitationSeed { shouldInvitationBeAssignedToDefaultAssignee = true }
 		val (payload, headers) = generateSignedPayload(defaultJwt)
 
 		client.post().uri("/auth/hooks/custom_access_token")
@@ -166,7 +163,7 @@ class AuthWebhookControllerTest @Autowired constructor(
 
 	@Test
 	fun `customAccessToken should return 403 for frozen user`() {
-		seedUsersAndInvitation { freezeAssignee = true }
+		quickUserAndInvitationSeed { shouldAssigneeBeFrozen = true }
 		val (payload, headers) = generateSignedPayload(defaultJwt)
 
 		client.post().uri("/auth/hooks/custom_access_token")
@@ -205,6 +202,16 @@ class AuthWebhookControllerTest @Autowired constructor(
 			.expectStatus().isUnauthorized
 	}
 
+	/**
+	 * Generates a signed payload for webhook testing.
+	 *
+	 * This function takes a payload object, serializes it to a JSON string,
+	 * and then creates the necessary webhook signature headers (`x-unbranded-msg-id`,
+	 * `x-unbranded-msg-timestamp`, `x-unbranded-msg-signature`).
+	 *
+	 * @param payload The payload object to sign.
+	 * @return A pair containing the JSON payload string and the HTTP headers with the signature.
+	 */
 	private fun generateSignedPayload(payload: Any): Pair<String, HttpHeaders> {
 		val payloadString = objectMapper.writeValueAsString(payload)
 		val timestamp = Instant.now().epochSecond
@@ -218,8 +225,16 @@ class AuthWebhookControllerTest @Autowired constructor(
 		return Pair(payloadString, headers)
 	}
 
-	private fun seedUsersAndInvitation(configure: SeedConfig.() -> Unit = {}) = runBlocking {
-		val cfg = SeedConfig().apply(configure)
+	/**
+	 * Seeds the database with a user and an invitation for testing purposes.
+	 *
+	 * This function simplifies setting up the database state for tests. It creates an assignor user
+	 * and an invitation, with optional configurations for the invitation and assignee state.
+	 *
+	 * @param configure A lambda to configure the seed data using [InvitationAndUserStateSeedConfig].
+	 */
+	private fun quickUserAndInvitationSeed(configure: InvitationAndUserStateSeedConfig.() -> Unit = {}) = runBlocking {
+		val cfg = InvitationAndUserStateSeedConfig().apply(configure)
 
 		userRepository.save(
 			UserEntity(
@@ -229,36 +244,73 @@ class AuthWebhookControllerTest @Autowired constructor(
 				email = ASSIGNOR_EMAIL
 			)
 		)
-		val assignee = if (cfg.assignInvitation || cfg.freezeAssignee) {
+		val assignee = if (cfg.shouldInvitationBeAssignedToDefaultAssignee || cfg.shouldAssigneeBeFrozen) {
 			userRepository.save(
 				UserEntity(
 					userId = ASSIGNEE_ID,
 					displayName = "Assignee",
 					role = NewzroomRoleEntity.WRITER,
 					email = ASSIGNEE_EMAIL,
-					freezeTill = if (cfg.freezeAssignee) Instant.now().plusSeconds(3600) else null,
-					freezeCause = if (cfg.freezeAssignee) "Test Freeze" else null
+					freezeTill = if (cfg.shouldAssigneeBeFrozen) Instant.now().plusSeconds(3600) else null,
+					freezeCause = if (cfg.shouldAssigneeBeFrozen) "Test Freeze" else null
 				)
 			)
 		} else null
 		invitationRepository.save(
 			InvitationEntity(
-				email = cfg.invitationEmail ?: ASSIGNEE_EMAIL,
+				email = cfg.defaultAssigneeEmailOverride ?: ASSIGNEE_EMAIL,
 				role = NewzroomRoleEntity.WRITER,
-				eat = cfg.eat,
+				eat = cfg.invitationExpiresAt,
 				assignor = ASSIGNOR_ID,
 				assignee = assignee?.userId
 			)
 		)
 	}
 
-
-	class SeedConfig {
-		var eat: Instant = Instant.now().plusSeconds(3600)
-		var assignInvitation: Boolean = false
-		var invitationEmail: String? = null
-		var freezeAssignee: Boolean = false
+	/**
+	 * Configuration class for [quickUserAndInvitationSeed].
+	 *
+	 * Provides options to customize the seeded user and invitation data.
+	 */
+	class InvitationAndUserStateSeedConfig {
+		var invitationExpiresAt: Instant = Instant.now().plusSeconds(3600)
+		var shouldInvitationBeAssignedToDefaultAssignee: Boolean = false
+		var defaultAssigneeEmailOverride: String? = null
+		var shouldAssigneeBeFrozen: Boolean = false
 	}
+
+	private val defaultBeforeUserCreatedPayload: BeforeUserCreatedPayload
+		get() {
+			val now = Instant.now()
+			return BeforeUserCreatedPayload(
+				metadata = BeforeUserCreatedPayload.Metadata(
+					uuid = UUID.randomUUID(),
+					time = now,
+					ipAddress = "127.0.0.1",
+					name = "before-user-created"
+				),
+				user = BeforeUserCreatedPayload.User(
+					id = ASSIGNEE_ID,
+					aud = "authenticated",
+					role = "authenticated",
+					email = ASSIGNEE_EMAIL,
+					phone = "",
+					appMetadata = BeforeUserCreatedPayload.User.AppMetadata(
+						provider = "email",
+						providers = listOf("email")
+					),
+					userMetadata = BeforeUserCreatedPayload.User.UserMetadata(
+						avatarUrl = "url",
+						email = ASSIGNEE_EMAIL,
+						fullName = "Test User"
+					),
+					identities = emptyList(),
+					createdAt = now,
+					updatedAt = now,
+					isAnonymous = false
+				)
+			)
+		}
 
 	private val defaultJwt: JwtPayload
 		get() {

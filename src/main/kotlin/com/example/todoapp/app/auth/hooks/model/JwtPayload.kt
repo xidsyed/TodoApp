@@ -24,7 +24,7 @@ data class JwtPayload(
 		val appMetadata: AppMetadata,
 		val userMetadata: UserMetadata,
 		val appRole: NewzroomRole? = null,
-		) {
+	) {
 		data class Amr(
 			val method: String,
 			val timestamp: Int

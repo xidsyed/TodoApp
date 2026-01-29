@@ -55,7 +55,7 @@ abstract class NewzDBIntegrationTest {
 			postgres.start()
 
 			applySchemaMigrations()
-			resetDatabase()
+			resetDatabaseToBaseline()
 		}
 
 		@AfterAll
@@ -85,6 +85,10 @@ abstract class NewzDBIntegrationTest {
 				.dataSource(postgres.jdbcUrl, "postgres", "postgres")
 				.defaultSchema("public")
 				.locations("filesystem:newzdb/supabase/migrations")
+				.sqlMigrationPrefix("")
+				.repeatableSqlMigrationPrefix("R")
+				.sqlMigrationSeparator("_")
+				.validateMigrationNaming(true)
 				.baselineOnMigrate(true)
 				.load()
 				.migrate()
@@ -122,8 +126,6 @@ abstract class NewzDBIntegrationTest {
 			val seedDir = File("newzdb/supabase/seeds")
 			if (!seedDir.exists()) return
 
-			logger.info("Applying baseline seeds")
-
 			seedDir.listFiles { _, name ->
 				name.matches(Regex("""R_\d+_baseline_.*\.sql"""))
 			}
@@ -137,7 +139,8 @@ abstract class NewzDBIntegrationTest {
 				}
 		}
 
-		private fun resetDatabase() {
+		private fun resetDatabaseToBaseline() {
+			logger.info("Resetting database to baseline")
 			withConnection {
 				truncateAllTables(it)
 				applyBaselineSeeds(it)
@@ -151,7 +154,7 @@ abstract class NewzDBIntegrationTest {
 
 	@BeforeEach
 	fun beforeEach() {
-		resetDatabase()
+		resetDatabaseToBaseline()
 	}
 
 }

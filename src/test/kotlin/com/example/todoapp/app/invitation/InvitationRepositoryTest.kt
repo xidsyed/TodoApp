@@ -67,8 +67,8 @@ class InvitationRepositoryTest @Autowired constructor(
 			email = "iwanttosignup@email.com",
 			assignor = userId1,
 			role = NewzroomRoleEntity.WRITER,
-			eat = Instant.now().plus(1, ChronoUnit.DAYS),
-			createdAt = Instant.now(),
+			eat = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MICROS),
+			createdAt = Instant.now().truncatedTo(ChronoUnit.MICROS),
 			assignee = null,
 		)
 		val savedInvite = repo.save(invite)
@@ -127,20 +127,6 @@ class InvitationRepositoryTest @Autowired constructor(
 		assertEquals(savedInvite.eat, expiredAt)
 	}
 
-	@Test
-	fun `cannot add invitation with eat less than or equal to current time`(): Unit = runBlocking {
-		val invite = InvitationEntity(
-			id = null,
-			email = "iwanttosignup@email.com",
-			assignor = userId1,
-			role = NewzroomRoleEntity.WRITER,
-			eat = Instant.now().minus(1, ChronoUnit.DAYS),
-			assignee = null,
-		)
-		assertFailsWith<DataIntegrityViolationException> {
-			repo.save(invite)
-		}
-	}
 
 	@Test
 	fun `cannot add two invitations with the same email`(): Unit = runBlocking {

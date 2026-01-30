@@ -1,5 +1,6 @@
 package com.example.todoapp.app.users
 
+import com.example.todoapp.NewzDBIntegrationTest
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import com.example.todoapp.app.users.entity.UserEntity
 import com.example.todoapp.common.util.logger
@@ -7,18 +8,16 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.r2dbc.core.DatabaseClient
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlin.test.*
 
-@SpringBootTest
 class UserRepositoryTest @Autowired constructor(
 	private val repo: UserRepository,
 	private val dbClient: DatabaseClient
-) {
+) : NewzDBIntegrationTest(){
 	val userId1: UUID = UUID.randomUUID()
 	val userId2: UUID = UUID.randomUUID()
 

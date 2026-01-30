@@ -1,5 +1,6 @@
 package com.example.todoapp.core.cache.data
 
+import com.example.todoapp.NewzDBIntegrationTest
 import com.example.todoapp.TestUtils.testLog
 import com.example.todoapp.core.cache.CachePersistenceRepository
 import com.example.todoapp.core.serializer.createJacksonSerializer
@@ -10,7 +11,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.r2dbc.core.DatabaseClient
 import tools.jackson.databind.json.JsonMapper
 import java.time.Duration
@@ -20,12 +20,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-@SpringBootTest
 class PersistedCacheImplIntegrationTest @Autowired constructor(
 	private val persistence: CachePersistenceRepository,
 	private val dbClient: DatabaseClient,
 	private val jsonMapper: JsonMapper
-) {
+) : NewzDBIntegrationTest(){
 
 	// --- Helpers / constants ---
 	private data class MyTestValue(val message: String, val code: Int)

@@ -1,5 +1,6 @@
 package com.example.todoapp.app.invitation
 
+import com.example.todoapp.NewzDBIntegrationTest
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import com.example.todoapp.app.invitation.entity.InvitationEntity
 import com.example.todoapp.app.invitation.mapper.dto
@@ -11,20 +12,18 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.r2dbc.core.DatabaseClient
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlin.test.*
 
-@SpringBootTest
 class InvitationViewRepositoryTest @Autowired constructor(
 	private val invitationRepo: InvitationRepository,
 	private val viewRepo: InvitationViewRepository,
 	private val userRepo: UserRepository,
 	private val dbClient: DatabaseClient
-) {
+) : NewzDBIntegrationTest() {
 
 
 	private val userId1 = UUID.randomUUID()

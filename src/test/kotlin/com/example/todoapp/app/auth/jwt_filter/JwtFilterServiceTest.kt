@@ -1,62 +1,61 @@
 package com.example.todoapp.app.auth.jwt_filter
 
+import com.example.todoapp.NewzDBIntegrationTest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-@SpringBootTest
-class JwtFilterServiceTest {
+class JwtFilterServiceTest : NewzDBIntegrationTest() {
 
-    @Autowired
-    private lateinit var jwtFilterService: JwtFilterService
+	@Autowired
+	private lateinit var jwtFilterService: JwtFilterService
 
-    @Test
-    fun `isBlacklisted should return false for a token that is not blacklisted`() = runBlocking {
-        val sub = "user1"
-        val iat = Instant.now()
+	@Test
+	fun `isBlacklisted should return false for a token that is not blacklisted`() = runBlocking {
+		val sub = "user1"
+		val iat = Instant.now()
 
-        val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, iat)
+		val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, iat)
 
-        assertFalse(isBlacklisted)
-    }
+		assertFalse(isBlacklisted)
+	}
 
-    @Test
-    fun `isBlacklisted should return true for a token that is blacklisted`() = runBlocking {
-        val sub = "user2"
-        val iat = Instant.now()
+	@Test
+	fun `isBlacklisted should return true for a token that is blacklisted`() = runBlocking {
+		val sub = "user2"
+		val iat = Instant.now()
 
-        jwtFilterService.blacklistOldTokensForSub(sub, iat)
-        val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, iat)
+		jwtFilterService.blacklistOldTokensForSub(sub, iat)
+		val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, iat)
 
-        assertTrue(isBlacklisted)
-    }
+		assertTrue(isBlacklisted)
+	}
 
-    @Test
-    fun `isBlacklisted should return false for a token issued after the minIat`() = runBlocking {
-        val sub = "user3"
-        val minIat = Instant.now()
-        val newTokenIat = minIat.plus(1, ChronoUnit.SECONDS)
+	@Test
+	fun `isBlacklisted should return false for a token issued after the minIat`() = runBlocking {
+		val sub = "user3"
+		val minIat = Instant.now()
+		val newTokenIat = minIat.plus(1, ChronoUnit.SECONDS)
 
-        jwtFilterService.blacklistOldTokensForSub(sub, minIat)
-        val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, newTokenIat)
+		jwtFilterService.blacklistOldTokensForSub(sub, minIat)
+		val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, newTokenIat)
 
-        assertFalse(isBlacklisted)
-    }
+		assertFalse(isBlacklisted)
+	}
 
-    @Test
-    fun `isBlacklisted should return true for a token issued before the minIat`() = runBlocking {
-        val sub = "user4"
-        val minIat = Instant.now()
-        val oldTokenIat = minIat.minus(1, ChronoUnit.SECONDS)
+	@Test
+	fun `isBlacklisted should return true for a token issued before the minIat`() = runBlocking {
+		val sub = "user4"
+		val minIat = Instant.now()
+		val oldTokenIat = minIat.minus(1, ChronoUnit.SECONDS)
 
-        jwtFilterService.blacklistOldTokensForSub(sub, minIat)
-        val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, oldTokenIat)
+		jwtFilterService.blacklistOldTokensForSub(sub, minIat)
+		val isBlacklisted = jwtFilterService.isTokenBlacklistedBySub(sub, oldTokenIat)
 
-        assertTrue(isBlacklisted)
-    }
+		assertTrue(isBlacklisted)
+	}
 }

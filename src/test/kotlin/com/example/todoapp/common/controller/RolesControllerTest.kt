@@ -1,18 +1,17 @@
 package com.example.todoapp.common.controller
 
+import com.example.todoapp.NewzDBIntegrationTest
 import com.example.todoapp.app.auth.roles.data.model.NewzroomRole.*
 import com.example.todoapp.test.WithMockJwt
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.test.web.reactive.server.WebTestClient
 
-@SpringBootTest
 @AutoConfigureWebTestClient
 class RolesControllerTest @Autowired constructor(
 	private val client: WebTestClient
-) {
+) : NewzDBIntegrationTest(){
 
 	@Test
 	@WithMockJwt(role = ADMIN)

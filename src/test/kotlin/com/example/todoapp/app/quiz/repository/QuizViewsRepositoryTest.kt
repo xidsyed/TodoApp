@@ -1,5 +1,6 @@
 package com.example.todoapp.app.quiz.repository
 
+import com.example.todoapp.NewzDBIntegrationTest
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import com.example.todoapp.app.quiz.mapper.*
 import com.example.todoapp.app.quiz.model.entity.*
@@ -10,12 +11,10 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import java.time.Instant
 import java.util.*
 import kotlin.test.*
 
-@SpringBootTest
 class QuizViewsRepositoryTest @Autowired constructor(
 	private val quizItemRepo: QuizItemRepository,
 	private val quizRepo: QuizRepository,
@@ -25,7 +24,7 @@ class QuizViewsRepositoryTest @Autowired constructor(
 	private val channelRepo: ChannelRepository,
 	private val viewRepo: QuizViewsRepository,
 	private val userRepo: UserRepository,
-) {
+) : NewzDBIntegrationTest(){
 
 	private val logger = logger()
 

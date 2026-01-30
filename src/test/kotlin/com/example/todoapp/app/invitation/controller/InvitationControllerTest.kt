@@ -1,5 +1,6 @@
 package com.example.todoapp.app.invitation.controller
 
+import com.example.todoapp.NewzDBIntegrationTest
 import com.example.todoapp.app.auth.roles.data.entity.NewzroomRoleEntity
 import com.example.todoapp.app.auth.roles.data.model.NewzroomRole
 import com.example.todoapp.app.auth.roles.data.model.NewzroomRole.ADMIN
@@ -14,7 +15,6 @@ import com.example.todoapp.test.WithMockJwt
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.http.*
 import org.springframework.http.MediaType
@@ -26,13 +26,12 @@ import java.util.*
 private const val TEST_USER_ID_STRING = "f3a6c539-d7a7-4432-8a23-6374106fab27"
 private val TEST_USER_ID = UUID.fromString(TEST_USER_ID_STRING)
 
-@SpringBootTest
 @AutoConfigureWebTestClient
-class InvitationControllerTest(
-	@Autowired private val client: WebTestClient,
-	@Autowired private val userRepo: UserRepository,
-	@Autowired private val invitationRepo: InvitationRepository
-) {
+class InvitationControllerTest @Autowired constructor(
+	private val client: WebTestClient,
+	private val userRepo: UserRepository,
+	private val invitationRepo: InvitationRepository
+) : NewzDBIntegrationTest() {
 
 	private val log = logger()
 

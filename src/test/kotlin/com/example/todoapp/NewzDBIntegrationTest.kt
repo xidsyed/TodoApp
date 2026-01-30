@@ -9,7 +9,7 @@ import org.springframework.core.io.FileSystemResource
 import org.springframework.jdbc.datasource.init.ScriptUtils
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.test.context.*
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import java.io.File
 import java.sql.Connection
 

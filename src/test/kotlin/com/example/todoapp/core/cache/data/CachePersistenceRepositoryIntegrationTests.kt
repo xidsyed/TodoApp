@@ -1,21 +1,20 @@
 package com.example.todoapp.core.cache.data
 
+import com.example.todoapp.NewzDBIntegrationTest
 import com.example.todoapp.core.cache.CachePersistenceRepository
 import com.example.todoapp.core.cache.data.entity.KvCacheEntity
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.r2dbc.core.DatabaseClient
 import java.time.OffsetDateTime
 import kotlin.test.*
 
-@SpringBootTest
 class CachePersistenceRepositoryIntegrationTests @Autowired constructor(
     private val cacheRepo: CachePersistenceRepository,
     private val dbClient: DatabaseClient
-) {
+) : NewzDBIntegrationTest() {
 
 
     @AfterEach

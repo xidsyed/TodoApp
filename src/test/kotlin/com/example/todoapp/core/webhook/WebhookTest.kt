@@ -1,5 +1,6 @@
 package com.example.todoapp.core.webhook
 
+import com.example.todoapp.NewzDBIntegrationTest
 import com.example.todoapp.TestUtils.testLog
 import com.example.todoapp.core.webhook.Webhook.Companion.UNBRANDED_MSG_ID_KEY
 import com.example.todoapp.core.webhook.Webhook.Companion.UNBRANDED_MSG_SIGNATURE_KEY
@@ -8,13 +9,11 @@ import com.example.todoapp.core.webhook.exception.WebhookVerificationException
 import com.example.todoapp.core.webhook.properties.WebhookSource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpHeaders
 import java.util.*
 import kotlin.test.*
 
-@SpringBootTest
-class WebhookTest @Autowired constructor(webhookRegistry: WebhookRegistry) {
+class WebhookTest @Autowired constructor(webhookRegistry: WebhookRegistry) : NewzDBIntegrationTest(){
 	val supabaseAuthWebhook = webhookRegistry[WebhookSource.SUPABASE]
 
 	private val logger = LoggerFactory.getLogger(WebhookTest::class.java)

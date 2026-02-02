@@ -1,6 +1,7 @@
 package com.example.todoapp.common.controller
 
 import com.example.todoapp.app.auth.jwt_filter.JwtFilterService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.http.*
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
@@ -10,7 +11,8 @@ import org.springframework.web.bind.annotation.*
 @EnableReactiveMethodSecurity
 @RequestMapping("/hello")
 class HelloController(
-	private val jwtFilterService: JwtFilterService
+	private val jwtFilterService: JwtFilterService,
+	private val dsl: DSLContext
 ) {
 	private val logger = LoggerFactory.getLogger(HelloController::class.java)
 

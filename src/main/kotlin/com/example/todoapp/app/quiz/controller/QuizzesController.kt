@@ -26,5 +26,4 @@ class QuizzesController(
 		}
 		return quizService.upsertQuiz(request).getOrThrow()
 	}
-
 }

@@ -3,7 +3,7 @@ plugins {
 	kotlin("plugin.spring") version "2.2.21"
 	id("org.springframework.boot") version "4.0.0"
 	id("io.spring.dependency-management") version "1.1.7"
-	id("org.jooq.jooq-codegen-gradle") version "3.19.29"
+	id("org.jooq.jooq-codegen-gradle") version "3.20.11"
 }
 
 group = "com.example"
@@ -37,14 +37,15 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 
 	// jooq
-	implementation("org.springframework.boot:spring-boot-starter-jooq")
-	implementation("org.jooq:jooq-kotlin:3.19.29")
-	implementation("org.jooq:jooq-kotlin-coroutines:3.19.29")
+	implementation("org.jooq:jooq:3.20.11")
+	implementation("org.jooq:jooq-kotlin:3.20.11")
+	implementation("org.jooq:jooq-kotlin-coroutines:3.20.11")
+	// This is the key module for Reactor context propagation:
+	implementation("org.jooq:jooq-reactor-extensions:3.20.11")
 	jooqCodegen("org.postgresql:postgresql")
 
 	// database
 	implementation("org.postgresql:r2dbc-postgresql")
-
 
 	// Security
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -149,7 +150,7 @@ jooq {
 			generate {
 				records = true
 				immutablePojos = true
-				fluentSetters = false
+				fluentSetters = true
 				kotlinNotNullPojoAttributes = true
 				kotlinNotNullRecordAttributes = true
 				jooqVersionReference = false

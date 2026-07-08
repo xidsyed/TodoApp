@@ -37,8 +37,7 @@ CREATE TABLE IF NOT EXISTS public.quiz_items
     story       jsonb,
     created_at  timestamptz NOT NULL DEFAULT now(),
     updated_at  timestamptz NOT NULL DEFAULT now(),
-    deleted_at  timestamptz,
-    version     int         NOT NULL
+    deleted_at  timestamptz
 );
 
 CREATE INDEX idx_quiz_items_question ON public.quiz_items USING gin (to_tsvector('english', question));
@@ -53,16 +52,17 @@ EXECUTE FUNCTION extensions.moddatetime('updated_at');
 -- quizzes table
 CREATE TABLE IF NOT EXISTS public.quizzes
 (
-    id           uuid PRIMARY KEY     DEFAULT extensions.uuid_generate_v4(),
-    title        text        NOT NULL,
-    description  text,
-    channel_id   uuid        NOT NULL REFERENCES public.channels (id) ON DELETE RESTRICT,
-    author_id    uuid        REFERENCES public.user_profiles (id) ON DELETE SET NULL,
-    created_at   timestamptz NOT NULL DEFAULT now(),
-    updated_at   timestamptz NOT NULL DEFAULT now(),
-    published_at timestamptz NOT NULL,
-    deleted_at   timestamptz,
-    version      int         NOT NULL
+    id            uuid PRIMARY KEY     DEFAULT extensions.uuid_generate_v4(),
+    title         text        NOT NULL,
+    description   text,
+    channel_id    uuid        NOT NULL REFERENCES public.channels (id) ON DELETE RESTRICT,
+    author_id     uuid        REFERENCES public.user_profiles (id) ON DELETE SET NULL,
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    updated_at    timestamptz NOT NULL DEFAULT now(),
+    published_at  timestamptz NOT NULL,
+    deleted_at    timestamptz,
+    version       int         NOT NULL,
+    items_version int         NOT NULL
 );
 
 CREATE INDEX idx_quizzes_channel ON public.quizzes (channel_id);

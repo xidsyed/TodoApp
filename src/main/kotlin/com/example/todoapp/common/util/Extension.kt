@@ -8,7 +8,6 @@ import java.util.*
 
 inline fun <reified T> T.logger(): Logger = LoggerFactory.getLogger(this::class.java)
 
-
 fun err(status: HttpStatus, detail: String? = "", cause: Exception? = null, props: Map<String, Any>? = null) =
 	ErrorResponseException(status, ProblemDetail.forStatusAndDetail(status, detail).apply { properties = props }, cause)
 

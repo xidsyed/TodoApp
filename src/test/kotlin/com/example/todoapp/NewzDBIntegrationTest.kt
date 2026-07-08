@@ -42,7 +42,7 @@ abstract class NewzDBIntegrationTest {
 		// Container
 		// ----------------------------
 
-		private val postgres = PostgreSQLContainer("postgres:15-alpine")
+		private val postgres = PostgreSQLContainer("postgres:15.15-alpine")
 			.withDatabaseName("newzdb")
 			.withUsername("postgres")
 			.withPassword("postgres")

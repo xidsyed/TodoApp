@@ -1,6 +1,10 @@
 spring:
+
   application:
     name: todoapp
+
+  reactor:
+    context-propagation=auto:
 
   main:
     lazy-initialization: false
@@ -14,14 +18,14 @@ spring:
 
   r2dbc:
     url: r2dbc:postgresql://localhost:54322/postgres
-  r2dbc.pool:
-    enabled: true
-    initial-size: 2
-    max-size: 4
-    max-idle-time: 5m
-    max-life-time: 30h
-    validation-query: SELECT 1
-    max-validation-time: 1s
+    pool:
+      enabled: true
+      initial-size: 2
+      max-size: 4
+      max-idle-time: 5m
+      max-life-time: 1h
+      validation-query: SELECT 1
+      max-validation-time: 1s
 
   security:
     oauth2:

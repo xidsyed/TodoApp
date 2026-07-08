@@ -41,3 +41,11 @@ out/
 
 # SECRETS!
 src/main/resources/secrets.yaml
+
+node_modules/
+newzdb/node_modules/
+
+newzdb/*.env
+newzdb/supabase/.branches/
+newzdb/supabase/.temp/
+newzdb/supabase/signing_key.json
